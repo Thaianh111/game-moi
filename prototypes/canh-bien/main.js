@@ -211,8 +211,21 @@ const pbar = document.getElementById('pbar');
 manager.onProgress = (_u, l, t) => { pbar.style.width = (l / t * 100).toFixed(0) + '%'; };
 const loader = new GLTFLoader(manager);
 const cache = new Map();
+// Bản xem trên claude.ai nhúng model vào models-embed.js; bản GitHub tải file .glb bình thường.
+let EMBED = null;
+try { EMBED = (await import('./models-embed.js')).default; } catch (e) { EMBED = null; }
+if (EMBED) loader.register(parser => { parser.textureLoader = new THREE.TextureLoader(parser.options.manager); return { name: 'img-texture' }; });
+if (EMBED) manager.setURLModifier(u => { for (const k in EMBED.tex) if (u.endsWith(k)) return EMBED.tex[k]; return u; });
+function b64buf(b) { const s = atob(b), a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a.buffer; }
+let embedDone = 0;
+function loadGLB(path) {
+  if (!EMBED) return loader.loadAsync('./models/' + path + '.glb');
+  return new Promise((res, rej) => loader.parse(b64buf(EMBED.glb[path]), path.split('/')[0] + '/', g => {
+    embedDone++; pbar.style.width = Math.min(100, embedDone / 30 * 100).toFixed(0) + '%'; res(g);
+  }, rej));
+}
 function getModel(path) {
-  if (!cache.has(path)) cache.set(path, loader.loadAsync('./models/' + path + '.glb').then(g => {
+  if (!cache.has(path)) cache.set(path, loadGLB(path).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }));
