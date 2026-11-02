@@ -255,7 +255,7 @@ async function put(parent, path, opts, x = 0, y = 0, z = 0, ry = 0) {
 // ---------- Build the world ----------
 const floaters = []; // vật nổi bập bềnh theo sóng: { obj, x, z, base, roll }
 const fishes = [];
-let raft, flag, lanternLight, lanternBulb, cages = [];
+let raft, flag, lanternLight, lanternBulb, cages = [], boatObj = null;
 const DECK = 0.85; // độ cao mặt sàn bè (so với mặt nước)
 
 const woodMat = new THREE.MeshStandardMaterial({ color: 0x9a6a45, roughness: 0.85 });
@@ -312,7 +312,7 @@ function buildCage(cx, cz, size) {
     m.position.y = top + up - (depth + up) / 2;
     m.rotation.y = side * Math.PI / 2;
     m.position.x = Math.sin(side * Math.PI / 2) * half; m.position.z = Math.cos(side * Math.PI / 2) * half;
-    cage.add(m);
+    m.userData.noWalk = true; cage.add(m);
   }
   // cọc + dây thành lồng
   const postGeo = new THREE.CylinderGeometry(0.05, 0.05, up + 0.15, 6);
@@ -325,7 +325,7 @@ function buildCage(cx, cz, size) {
     cage.add(p);
   }
   const rope = new THREE.Mesh(new THREE.TorusGeometry(half * Math.SQRT2, 0.025, 4, 4), ropeMat);
-  rope.rotation.set(Math.PI / 2, 0, Math.PI / 4); rope.position.y = top + up; cage.add(rope);
+  rope.rotation.set(Math.PI / 2, 0, Math.PI / 4); rope.position.y = top + up; rope.userData.noWalk = true; cage.add(rope);
   scene.add(cage);
   cages.push({ obj: cage, x: cx, z: cz, size });
   floaters.push({ obj: cage, x: cx, z: cz, base: 0, roll: 0.5 });
@@ -356,12 +356,13 @@ async function build() {
 
   // --- Chòi nghỉ (mái lá) ---
   const hut = await put(raft, 'pk/structure-roof', { w: 3.5 }, -2.6, DECK, -2.4, 0);
+  hut.userData.skipWalk = true;
   await put(raft, 'sk/bedroll', { w: 1.6 }, -2.9, DECK, -2.6, Math.PI / 2);
   await put(raft, 'sk/box', { w: 0.6 }, -1.8, DECK, -3.3, 0.3);
   await put(raft, 'pk/bottle-large', { h: 0.35 }, -1.75, DECK + 0.62, -3.3, 0);
   // đèn bão treo dưới mái
   lanternBulb = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffc070 }));
-  lanternBulb.position.set(-2.2, DECK + 2.0, -1.8); raft.add(lanternBulb);
+  lanternBulb.position.set(-2.2, DECK + 2.0, -1.8); lanternBulb.userData.skipWalk = true; raft.add(lanternBulb);
   lanternLight = new THREE.PointLight(0xffb060, 0, 14, 1.6);
   lanternLight.position.copy(lanternBulb.position); raft.add(lanternLight);
 
@@ -380,7 +381,7 @@ async function build() {
   flag = await put(raft, 'pk/flag-high', { h: 4.2 }, -3.55, DECK, 0.95, -0.4);
   // thuyền nhỏ buộc cạnh cầu tàu
   const boat = await make('pk/boat-row-small', { w: 2.6 });
-  boat.rotation.y = Math.PI / 2; scene.add(boat);
+  boat.rotation.y = Math.PI / 2; scene.add(boat); boatObj = boat;
   floaters.push({ obj: boat, x: 5.3, z: -0.6, base: -0.15, roll: 1, ry: 0.12 });
 
   // --- Lồng cá ---
@@ -428,6 +429,7 @@ async function build() {
     scene.add(d);
     movers.push({ obj: d, kind: 'drift', z: -14 + i * 7.5 + Math.random() * 3, x0: 60, x1: -60, sp: 0.9 + Math.random() * 0.5, ph: Math.random(), base: -0.35, spin: Math.random() * 6 });
   }
+  await setupPlayer();
 }
 const movers = [];
 
@@ -472,6 +474,129 @@ buttons.forEach(b => b.addEventListener('click', () => {
   buttons.forEach(x => x.classList.toggle('on', x === b));
   document.getElementById('sub').textContent = { day: 'Ca trực · Ngày 1/5 · Trời quang', sunset: 'Ca trực · Ngày 1/5 · Chiều tà', night: 'Ca trực · Đêm 1/5 · Gió nhẹ', storm: 'Ca trực · Ngày 3/5 · Bão tới!' }[mode];
 }));
+
+// ---------- Người giữ biển: nhân vật điều khiển ----------
+let player = null;
+const P = { vel: new THREE.Vector3(), grounded: false, state: '', respawnAt: 0, yaw: 0, jumpT: -9, moved: false };
+const walkables = [];
+const ray = new THREE.Raycaster(); const DOWN = new THREE.Vector3(0, -1, 0); const _o = new THREE.Vector3();
+// vật cản trên bè (toạ độ của bè): x, z, bán kính, chiều cao
+const COLLIDERS = [[3.35, -0.9, 0.42, 0.95], [3.15, -0.05, 0.42, 0.95], [2.35, -0.35, 0.4, 0.85], [3.3, 0.9, 0.45, 0.8],
+  [2.4, -3.05, 0.75, 0.9], [0.3, -3.35, 0.45, 0.6], [0.6, -1.15, 0.6, 1.3], [-1.8, -3.3, 0.32, 0.6], [-3.55, 0.95, 0.18, 5], [1.25, 0.95, 0.25, 0.5]];
+const input = { x: 0, z: 0, jump: false };
+const keys = {};
+addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (e.key === ' ') { input.jump = true; e.preventDefault(); } });
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+{
+  const joy = document.getElementById('joy'), knob = joy.firstElementChild; let id = null;
+  const mv = e => {
+    const r = joy.getBoundingClientRect(); let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+    const max = r.width / 2 - 8, d = Math.hypot(dx, dy); if (d > max) { dx *= max / d; dy *= max / d; }
+    knob.style.transform = `translate(${dx}px,${dy}px)`; input.x = dx / max; input.z = dy / max;
+  };
+  joy.addEventListener('pointerdown', e => { id = e.pointerId; joy.setPointerCapture(id); mv(e); e.preventDefault(); });
+  joy.addEventListener('pointermove', e => { if (e.pointerId === id) mv(e); });
+  const end = e => { if (e.pointerId !== id) return; id = null; input.x = input.z = 0; knob.style.transform = ''; };
+  joy.addEventListener('pointerup', end); joy.addEventListener('pointercancel', end);
+  const jb = document.getElementById('jump');
+  jb.addEventListener('pointerdown', e => { input.jump = true; e.preventDefault(); });
+  if (!('ontouchstart' in window) && !isMobile) { joy.style.display = 'none'; jb.style.display = 'none';
+    document.getElementById('hint').textContent = 'WASD / mũi tên để đi · Shift chạy · Space nhảy · Kéo chuột để xoay'; }
+}
+const toastEl = document.getElementById('toast');
+function toast(msg) { toastEl.textContent = msg; toastEl.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => toastEl.style.opacity = 0, 1600); }
+
+function spawnPoint() { return raft.localToWorld(new THREE.Vector3(0.2, DECK + 0.3, 2.2)); }
+async function setupPlayer() {
+  const [ch, gen, mov] = await Promise.all([loadGLB('kk/Ranger'), loadGLB('kk/Rig_Medium_General'), loadGLB('kk/Rig_Medium_MovementBasic')]);
+  const model = ch.scene;
+  model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } });
+  _box.setFromObject(model); _box.getSize(_v);
+  model.scale.setScalar(1.3 / _v.y);
+  _box.setFromObject(model); model.position.y = -_box.min.y;
+  player = new THREE.Group(); player.add(model); scene.add(player);
+  P.mixer = new THREE.AnimationMixer(model);
+  const clips = [...gen.animations, ...mov.animations];
+  const act = n => { const c = THREE.AnimationClip.findByName(clips, n); return c ? P.mixer.clipAction(c) : null; };
+  P.actions = { idle: act('Idle_A'), walk: act('Walking_A'), run: act('Running_A'), jumpStart: act('Jump_Start'), jumpIdle: act('Jump_Idle') };
+  if (P.actions.jumpStart) { P.actions.jumpStart.setLoop(THREE.LoopOnce, 1); P.actions.jumpStart.clampWhenFinished = true; }
+  for (const c of raft.children) if (!c.userData.skipWalk && !c.isLight) walkables.push(c);
+  for (const cg of cages) walkables.push(cg.obj);
+  if (boatObj) walkables.push(boatObj);
+  player.position.copy(spawnPoint());
+  playAnim('idle');
+  // camera theo nhân vật
+  controls.autoRotate = false; controls.minDistance = 4; controls.maxDistance = 30;
+  const k = camera.aspect < 0.8 ? 1.45 : 1;
+  controls.target.set(player.position.x, player.position.y + 0.9, player.position.z);
+  camera.position.set(player.position.x + 6.5 * k, player.position.y + 5.5 * k, player.position.z + 8.5 * k);
+}
+function playAnim(name) {
+  if (P.state === name || !P.actions[name]) return;
+  const prev = P.actions[P.state], next = P.actions[name];
+  next.reset().setEffectiveWeight(1).fadeIn(0.18).play();
+  if (prev) prev.fadeOut(0.18);
+  P.state = name;
+}
+function groundAt(x, y, z) {
+  _o.set(x, y + 0.6, z); ray.set(_o, DOWN); ray.far = 4;
+  const hits = ray.intersectObjects(walkables, true);
+  for (const h of hits) { if (!h.object.userData.noWalk) return h.point.y; }
+  return null;
+}
+function updatePlayer(dt, t) {
+  if (!player) return;
+  P.mixer.update(dt);
+  const pos = player.position;
+  if (P.respawnAt) {
+    if (t < P.respawnAt) return;
+    P.respawnAt = 0; pos.copy(spawnPoint()); P.vel.set(0, 0, 0); player.visible = true;
+  }
+  // hướng đi theo góc camera
+  let ix = input.x + ((keys.d || keys.arrowright) ? 1 : 0) - ((keys.a || keys.arrowleft) ? 1 : 0);
+  let iz = input.z + ((keys.s || keys.arrowdown) ? 1 : 0) - ((keys.w || keys.arrowup) ? 1 : 0);
+  const mag = Math.min(1, Math.hypot(ix, iz));
+  const yawC = Math.atan2(camera.position.x - controls.target.x, camera.position.z - controls.target.z);
+  const fx = -Math.sin(yawC), fz = -Math.cos(yawC), rx = -fz, rz = fx;
+  let mx = rx * ix - fx * iz, mz = rz * ix - fz * iz; const ml = Math.hypot(mx, mz);
+  if (ml > 1e-3) { mx /= ml; mz /= ml; }
+  const running = mag > 0.8 || keys.shift;
+  const speed = mag < 0.1 ? 0 : (running ? 4.4 : 2.2);
+  if (speed > 0 && !P.moved) { P.moved = true; const h = document.getElementById('hint'); h.style.opacity = 0; }
+  pos.x += mx * speed * dt; pos.z += mz * speed * dt;
+  if (speed > 0) {
+    const want = Math.atan2(mx, mz); let d = want - P.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
+    P.yaw += d * Math.min(1, dt * 12); player.rotation.y = P.yaw;
+  }
+  // va chạm đồ trên bè
+  const lx = pos.x - raft.position.x, lz = pos.z - raft.position.z, feet = pos.y - raft.position.y;
+  for (const [cx, cz, r, h] of COLLIDERS) {
+    if (feet > DECK + h - 0.12) continue;
+    const dx = lx - cx, dz = lz - cz, d = Math.hypot(dx, dz), m = r + 0.22;
+    if (d < m && d > 1e-4) { pos.x += dx / d * (m - d); pos.z += dz / d * (m - d); }
+  }
+  // nhảy + trọng lực
+  if (input.jump && P.grounded) { P.vel.y = 7.0; P.grounded = false; P.jumpT = t; }
+  input.jump = false;
+  P.vel.y -= 21 * dt; pos.y += P.vel.y * dt;
+  const g = groundAt(pos.x, pos.y, pos.z);
+  if (g !== null && P.vel.y <= 0 && (pos.y <= g + 0.02 || (P.grounded && pos.y - g < 0.4))) {
+    pos.y = g; P.vel.y = 0; P.grounded = true;
+  } else P.grounded = false;
+  // rớt xuống biển
+  const wy = waveH(pos.x, pos.z, t);
+  if (!P.grounded && pos.y < wy - 0.35) {
+    splash(pos.x, pos.z, t); splash(pos.x + 0.3, pos.z - 0.2, t + 0.15);
+    player.visible = false; P.respawnAt = t + 1.4; toast('Ùm! Rớt xuống biển rồi 😅');
+  }
+  // hoạt ảnh
+  if (!P.grounded) playAnim(t - P.jumpT < 0.22 ? 'jumpStart' : 'jumpIdle');
+  else playAnim(speed === 0 ? 'idle' : running ? 'run' : 'walk');
+  // camera bám theo
+  const k = 1 - Math.exp(-dt * 6);
+  _o.set(pos.x - controls.target.x, pos.y + 0.9 - controls.target.y, pos.z - controls.target.z).multiplyScalar(k);
+  controls.target.add(_o); camera.position.add(_o);
+}
 
 // ---------- Loop ----------
 const clock = new THREE.Clock();
@@ -583,6 +708,7 @@ function tick() {
   flash = Math.max(0, flash - dt * (flash > 0.5 ? 6 : 2.5));
   if (flash > 0 && flash < 0.6 && Math.random() < 0.04) flash = 0.9;
 
+  updatePlayer(dt, t);
   sky.position.copy(camera.position);
   controls.update();
   renderer.render(scene, camera);
