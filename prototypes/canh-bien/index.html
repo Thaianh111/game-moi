@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Người giữ biển – Cảnh thử</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1b2236; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #fff; }
+  canvas { display: block; touch-action: none; }
+  #hud { position: fixed; top: 12px; left: 12px; pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,.55); }
+  #hud h1 { margin: 0; font-size: 20px; letter-spacing: .5px; }
+  #hud p { margin: 2px 0 0; font-size: 13px; opacity: .85; }
+  #bar { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 6px; background: rgba(10,16,30,.45); padding: 6px; border-radius: 14px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  #bar button { border: 0; border-radius: 10px; padding: 8px 10px; font-size: 13px; color: #fff; background: rgba(255,255,255,.12); cursor: pointer; white-space: nowrap; }
+  #bar button.on { background: rgba(255,190,110,.85); color: #2a1a08; font-weight: 600; }
+  #credit { position: fixed; right: 10px; top: 12px; font-size: 11px; opacity: .7; text-shadow: 0 1px 3px rgba(0,0,0,.6); pointer-events: none; text-align: right; }
+  #load { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1b2236; transition: opacity .6s; z-index: 5; }
+  #load .t { font-size: 22px; margin-bottom: 14px; }
+  #load .b { width: 200px; height: 6px; background: rgba(255,255,255,.15); border-radius: 3px; overflow: hidden; }
+  #load .b i { display: block; height: 100%; width: 0; background: #ffbe6e; transition: width .2s; }
+  #err { position: fixed; inset: auto 10px 70px 10px; color: #ffd0d0; font-size: 12px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div id="load"><div class="t">🌊 Người giữ biển</div><div class="b"><i id="pbar"></i></div></div>
+<div id="hud"><h1>Người giữ biển</h1><p id="sub">Ca trực · Ngày 1/5</p></div>
+<div id="credit">© Võ Thái Anh<br>Model: Kenney (CC0)</div>
+<div id="bar">
+  <button data-mode="day">☀️ Ngày</button>
+  <button data-mode="sunset" class="on">🌅 Chiều</button>
+  <button data-mode="night">🌙 Đêm</button>
+  <button data-mode="storm">⛈️ Bão</button>
+</div>
+<div id="err"></div>
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.min.js", "three/addons/": "./lib/addons/" } }
+</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
