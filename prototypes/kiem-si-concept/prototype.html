@@ -1,0 +1,879 @@
+<!-- PROTOTYPE - NOT FOR PRODUCTION -->
+<!-- Question: Chạy, đạp tường và combo 3 nhát bằng nút cảm ứng trên điện thoại cầm ngang có "đã tay" không? -->
+<!-- Date: 2026-11-03 -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Kiếm Sĩ Bất Tận</title>
+<style>
+  :root {
+    --sal: env(safe-area-inset-left, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --bg: #0b0f18;
+    --panel: rgba(10, 14, 24, .82);
+    --text: #e9edf5;
+    --muted: #9aa6bd;
+    --accent: #ffb35c;
+  }
+  /* Game luôn là nền tối; khai báo lại cho chế độ tối để giữ đúng màu */
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0b0f18; --panel: rgba(10, 14, 24, .82); --text: #e9edf5; --muted: #9aa6bd; --accent: #ffb35c; } }
+  :root[data-theme="dark"] { --bg: #0b0f18; --panel: rgba(10, 14, 24, .82); --text: #e9edf5; --muted: #9aa6bd; --accent: #ffb35c; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  canvas { display: block; position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; }
+  .tb { position: fixed; top: 8px; width: 34px; height: 34px; border: 0; border-radius: 10px; z-index: 4;
+    background: rgba(255,255,255,.1); color: var(--text); font-size: 17px; cursor: pointer; touch-action: manipulation; }
+  #tuneBtn { right: calc(10px + var(--sar)); }
+  #fsBtn { right: calc(50px + var(--sar)); }
+  #tune { position: fixed; top: 48px; right: calc(10px + var(--sar)); width: min(300px, 70vw); max-height: calc(100% - 60px); overflow-y: auto;
+    background: var(--panel); border-radius: 12px; padding: 10px 12px; z-index: 5; font-size: 12px; box-sizing: border-box;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  #tune[hidden] { display: none; }
+  #tune label { display: block; margin: 6px 0 2px; color: var(--muted); }
+  #tune label b { color: var(--text); font-weight: 600; float: right; }
+  #tune input[type=range] { width: 100%; margin: 0; accent-color: var(--accent); }
+  #tune .row { display: flex; gap: 8px; margin-top: 10px; }
+  #tune button { flex: 1; border: 0; border-radius: 8px; padding: 7px; background: rgba(255,255,255,.12); color: var(--text); font-size: 12px; }
+  #rotate { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 10px;
+    background: var(--bg); z-index: 10; font-size: 18px; text-align: center; padding: 20px; }
+  #rotate span { font-size: 46px; }
+  @media (orientation: portrait) { #rotate { display: flex; } }
+  #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); z-index: 9; font-size: 16px; color: var(--muted); }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<button class="tb" id="fsBtn" title="Toàn màn hình">⛶</button>
+<button class="tb" id="tuneBtn" title="Chỉnh thông số">⚙</button>
+<div id="tune" hidden></div>
+<div id="rotate"><span>📱↻</span>Xoay ngang điện thoại để chơi nha</div>
+<div id="loading">Đang tải kiếm sĩ…</div>
+<script>
+// PROTOTYPE - NOT FOR PRODUCTION
+// Question: Chạy, đạp tường và combo 3 nhát bằng nút cảm ứng trên điện thoại cầm ngang có "đã tay" không?
+// Date: 2026-11-03
+'use strict';
+
+// ============ Thông số chỉnh được (giá trị cứng, chỉnh bằng nút ⚙) ============
+const T = {
+  runSpeed: 165, groundAccel: 4200, airAccel: 3200,
+  gravity: 1900, maxFall: 560,
+  jumpV: 640, jumpCut: 0.45, coyote: 0.08, jumpBuffer: 0.12,
+  dashSpeed: 340, dashTime: 0.32,
+  wallSlide: 95, wallStick: 0.14, wallGrace: 7,
+  wallJumpVx: 200, wallJumpVy: 600, wallJumpLock: 0.13,
+  atkSpeed: 1.0, hitstop: 1.0, crit: 0.15, btn: 1.0,
+};
+const DEFAULTS = Object.assign({}, T);
+const TUNE = [
+  ['runSpeed', 'Tốc độ chạy', 100, 260, 5],
+  ['jumpV', 'Lực nhảy', 450, 820, 10],
+  ['gravity', 'Trọng lực', 1200, 2800, 50],
+  ['jumpCut', 'Nhả nút nhảy sớm (1 = không cắt)', 0.1, 1, 0.05],
+  ['wallSlide', 'Tốc độ trượt tường', 30, 200, 5],
+  ['wallJumpVx', 'Lực đạp tường ngang', 120, 340, 10],
+  ['wallJumpLock', 'Thời gian khoá tay sau đạp tường', 0, 0.3, 0.01],
+  ['dashSpeed', 'Tốc độ lướt', 220, 480, 10],
+  ['atkSpeed', 'Tốc độ chém (x)', 0.6, 1.8, 0.05],
+  ['hitstop', 'Khựng hình (x)', 0, 2.5, 0.1],
+  ['btn', 'Cỡ nút (x)', 0.7, 1.5, 0.05],
+];
+try {
+  const saved = JSON.parse(localStorage.getItem('ksbt-tune') || '{}');
+  for (const k in saved) if (k in T && typeof saved[k] === 'number') T[k] = saved[k];
+} catch (e) { /* trình duyệt chặn localStorage thì dùng mặc định */ }
+
+// ============ Sprite ============
+const S = 0.75;                       // tỉ lệ vẽ: khung 128px -> nhân vật cao ~49 đơn vị
+const ANIMS = {
+  Idle: { file: 'idle.png', n: 16 }, Run: { file: 'run.png', n: 18 }, Jump: { file: 'jump.png', n: 6 },
+  Landing: { file: 'landing.png', n: 16 }, WallJump: { file: 'walljump.png', n: 20 }, Slide: { file: 'slide.png', n: 16 },
+  AttackSwing1: { file: 'attackswing1.png', n: 21 }, AttackSwing2: { file: 'attackswing2.png', n: 15 },
+  AttackSwing3: { file: 'attackswing3.png', n: 24 },
+};
+const IMG = {};
+
+// Đòn chém. Số khung theo dải sprite; box = vùng vệt kiếm (px trong khung, gốc ở chân nhân vật).
+const GROUND = [
+  { anim: 'AttackSwing1', from: 7, fps: 38, hit: [12, 15], cancel: 14, end: 20, lunge: 70,
+    box: [-28, 63, -93, -13], kb: [110, -90], dmg: [820, 1180], lines: 1, stop: 0.055, shake: 2.5 },
+  { anim: 'AttackSwing2', from: 4, fps: 38, hit: [9, 12], cancel: 12, end: 14, lunge: 80,
+    box: [-27, 63, -83, -3], kb: [90, -470], dmg: [900, 1300], lines: 2, stop: 0.065, shake: 3.5 },
+  { anim: 'AttackSwing3', from: 7, fps: 34, hit: [14, 19], cancel: 21, end: 23, lunge: 120,
+    box: [-53, 63, -99, 0], kb: [330, -210], dmg: [1500, 2100], lines: 3, stop: 0.12, shake: 7 },
+];
+const AIR = [
+  { anim: 'AttackSwing1', from: 9, fps: 42, hit: [12, 15], cancel: 15, end: 19,
+    box: [-28, 63, -93, -13], kb: [70, -300], dmg: [780, 1120], lines: 1, stop: 0.05, shake: 2 },
+  { anim: 'AttackSwing2', from: 6, fps: 42, hit: [9, 12], cancel: 12, end: 14,
+    box: [-27, 63, -83, -3], kb: [90, -320], dmg: [860, 1240], lines: 2, stop: 0.06, shake: 3 },
+  { anim: 'AttackSwing3', from: 10, fps: 38, hit: [14, 19], cancel: 21, end: 23, spike: true,
+    box: [-53, 63, -99, 0], kb: [200, 460], dmg: [1400, 2000], lines: 3, stop: 0.11, shake: 6 },
+];
+
+// ============ Đấu trường ============
+const H = 360, FLOOR = 300, WALL = 26;
+let AW = 640;
+let solids = [], plats = [], mover = null;
+function buildLevel() {
+  solids = [
+    { x: -100, y: -60, w: AW + 200, h: 60 },                         // trần
+    { x: -100, y: FLOOR, w: AW + 200, h: 200 },                      // sàn
+    { x: -100, y: -60, w: 100 + WALL, h: FLOOR + 160, wall: true },  // tường trái
+    { x: AW - WALL, y: -60, w: WALL + 100, h: FLOOR + 160, wall: true }, // tường phải
+  ];
+  mover = { x: AW / 2 - 52, y: 162, w: 104, h: 10, cx: AW / 2 - 52, amp: AW * 0.16, t: 0, dx: 0, moving: true };
+  plats = [
+    { x: AW * 0.16, y: 228, w: AW * 0.2, h: 10 },
+    { x: AW * 0.64, y: 228, w: AW * 0.2, h: 10 },
+    { x: WALL, y: 108, w: 74, h: 10 },
+    { x: AW - WALL - 74, y: 108, w: 74, h: 10 },
+    mover,
+  ];
+}
+
+// ============ Thực thể ============
+const P = {
+  x: 100, y: FLOOR, w: 18, h: 46, vx: 0, vy: 0, face: 1, onGround: true, ground: null,
+  state: 'move', coyote: 0, lock: 0, dashT: 0, dashJump: false, wallSide: 0, stickT: 0, canCut: false,
+  combo: 0, queued: false, airSwings: 0, hitSet: new Set(), comboWin: 0, nextCombo: 0, wjT: 0,
+  oneShot: null, anim: null, trail: [], trailT: 0, prevVy: 0, wasGround: true,
+};
+function makeBag(hx) { return { kind: 'bag', x: hx, y: FLOOR, hx, w: 26, h: 40, vx: 0, vy: 0, onGround: true, ground: null, flash: 0, squash: 0, rot: 0, idle: 0, numY: 0, numT: 9 }; }
+function makeFly(ax, ay) { return { kind: 'fly', x: ax, y: ay, ax, ay, vx: 0, vy: 0, flash: 0, squash: 0, t: 0, numY: 0, numT: 9 }; }
+let targets = [];
+function boxOf(t) {
+  if (t.kind === 'bag') return [t.x - t.w / 2, t.x + t.w / 2, t.y - t.h, t.y];
+  return [t.x - 15, t.x + 15, t.y - 15, t.y + 15];
+}
+
+const fx = [];       // bụi, tia lửa, vòng sáng
+const nums = [];     // số sát thương
+const combo = { hits: 0, t: 0, pop: 0 };
+const stats = { wjChain: 0, wjBest: 0, full: 0, time: 0, started: false };
+let hitstop = 0, shake = 0;
+
+// ============ Tiện ích ============
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rnd = (a, b) => a + Math.random() * (b - a);
+function approach(v, t, d) { return v < t ? Math.min(v + d, t) : Math.max(v - d, t); }
+function overlap(a, b) { return a[0] < b[1] && a[1] > b[0] && a[2] < b[3] && a[3] > b[2]; }
+
+// ============ Va chạm (x = giữa, y = chân) ============
+function moveBody(b, dt) {
+  const prevL = b.x - b.w / 2, prevR = b.x + b.w / 2;
+  b.x += b.vx * dt;
+  b.hitWall = 0;
+  for (const s of solids) {
+    const L = b.x - b.w / 2, R = b.x + b.w / 2, top = b.y - b.h, bot = b.y;
+    if (bot > s.y && top < s.y + s.h && R > s.x && L < s.x + s.w) {
+      if (prevR <= s.x + 0.5) { b.x = s.x - b.w / 2; b.hitWall = 1; }
+      else if (prevL >= s.x + s.w - 0.5) { b.x = s.x + s.w + b.w / 2; b.hitWall = -1; }
+      if (b.hitWall) { b.wallVx = b.vx; b.vx = 0; }
+    }
+  }
+  const prevBot = b.y;
+  b.y += b.vy * dt;
+  b.onGround = false; b.ground = null; b.landed = false;
+  const L = b.x - b.w / 2, R = b.x + b.w / 2;
+  for (const s of solids) {
+    if (b.y > s.y && b.y - b.h < s.y + s.h && R > s.x && L < s.x + s.w) {
+      if (b.vy >= 0 && prevBot <= s.y + 0.5) { b.impactVy = b.vy; b.y = s.y; b.vy = 0; b.onGround = true; b.ground = s; }
+      else if (b.vy < 0) { b.y = s.y + s.h + b.h; b.vy = 0; }
+    }
+  }
+  if (!b.onGround && b.vy >= 0) {
+    for (const p of plats) {
+      if (prevBot <= p.y + 0.5 && b.y >= p.y && R > p.x && L < p.x + p.w) { b.impactVy = b.vy; b.y = p.y; b.vy = 0; b.onGround = true; b.ground = p; break; }
+    }
+  }
+}
+function wallSideOf(b, dist) {
+  const top = b.y - b.h + 4, bot = b.y - 4;
+  for (const s of solids) {
+    if (!s.wall || !(bot > s.y && top < s.y + s.h)) continue;
+    const L = b.x - b.w / 2, R = b.x + b.w / 2;
+    if (L >= s.x + s.w - 0.5 && L - (s.x + s.w) <= dist) return -1;
+    if (R <= s.x + 0.5 && s.x - R <= dist) return 1;
+  }
+  return 0;
+}
+
+// ============ Nhập liệu ============
+const kb = { left: false, right: false, jump: false, dash: false };
+const tc = { left: false, right: false, jump: false, dash: false, attack: false };
+const buf = { jump: 0, attack: 0, dash: 0 };
+const inp = { left: false, right: false, jumpHeld: false, dashHeld: false };
+function press(k) {
+  if (!stats.started) stats.started = true;
+  if (k === 'jump') buf.jump = T.jumpBuffer;
+  else if (k === 'attack') buf.attack = 0.2;
+  else if (k === 'dash') buf.dash = 0.1;
+}
+const KEYMAP = {
+  ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right',
+  Space: 'jump', KeyZ: 'jump', KeyK: 'jump', ArrowUp: 'jump', KeyW: 'jump',
+  KeyX: 'attack', KeyJ: 'attack', KeyC: 'dash', KeyL: 'dash', ShiftLeft: 'dash', ShiftRight: 'dash',
+};
+addEventListener('keydown', e => {
+  const k = KEYMAP[e.code]; if (!k) return;
+  e.preventDefault();
+  if (e.repeat) return;
+  if (k === 'left' || k === 'right') { kb[k] = true; if (!stats.started) stats.started = true; }
+  else { kb[k] = true; press(k); }
+});
+addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k) kb[k] = false; });
+addEventListener('blur', () => { for (const k in kb) kb[k] = false; ptrs.clear(); });
+
+// Nút cảm ứng: nửa trái màn hình = chạy (ngón cái trượt qua lại được), phải = Nhảy / Chém / Lướt
+const ctrls = {};
+const ptrs = new Map();
+function classify(x, y) {
+  if (x < cssW * 0.45) return x < (ctrls.left.x + ctrls.right.x) / 2 ? 'left' : 'right';
+  let best = null, bd = 1e9;
+  for (const k of ['attack', 'jump', 'dash']) {
+    const c = ctrls[k]; const d = Math.hypot(x - c.x, y - c.y) / c.r;
+    if (d < bd) { bd = d; best = k; }
+  }
+  return bd < 2.2 ? best : null;
+}
+const cv = document.getElementById('cv');
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+  const c = classify(e.clientX, e.clientY);
+  ptrs.set(e.pointerId, c);
+  if (c === 'jump' || c === 'attack' || c === 'dash') press(c);
+  else if (c && !stats.started) stats.started = true;
+});
+cv.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const old = ptrs.get(e.pointerId);
+  const isMove = c => c === 'left' || c === 'right';
+  let c;
+  // ngón chạy chỉ đổi trái/phải; ngón nút chỉ lăn giữa các nút (không lẫn sang nhau)
+  if (isMove(old)) c = e.clientX < (ctrls.left.x + ctrls.right.x) / 2 ? 'left' : 'right';
+  else { c = classify(e.clientX, e.clientY); if (isMove(c)) c = null; }
+  if (c !== old) { ptrs.set(e.pointerId, c); if (c === 'jump' || c === 'attack' || c === 'dash') press(c); }
+});
+const endPtr = e => ptrs.delete(e.pointerId);
+cv.addEventListener('pointerup', endPtr);
+cv.addEventListener('pointercancel', endPtr);
+cv.addEventListener('contextmenu', e => e.preventDefault());
+function readInput() {
+  tc.left = tc.right = tc.jump = tc.dash = tc.attack = false;
+  for (const c of ptrs.values()) if (c) tc[c] = true;
+  inp.left = kb.left || tc.left; inp.right = kb.right || tc.right;
+  inp.jumpHeld = kb.jump || tc.jump; inp.dashHeld = kb.dash || tc.dash;
+}
+
+// ============ Hoạt ảnh ============
+function setAnim(name, from, fps, loop, to, tag) {
+  P.anim = { name, from, f: from, fps, loop: !!loop, to: to === undefined ? ANIMS[name].n - 1 : to, done: false, tag: tag || '' };
+}
+function stepAnim(a, dt) {
+  if (a.done || !a.fps) return;
+  a.f += a.fps * dt;
+  if (a.f >= a.to + 1) {
+    if (a.loop) a.f = a.from + ((a.f - a.from) % (a.to + 1 - a.from));
+    else { a.f = a.to + 0.999; a.done = true; }
+  }
+}
+
+// ============ Người chơi ============
+function doJump() {
+  P.vy = -T.jumpV; P.onGround = false; P.coyote = 0; buf.jump = 0; P.canCut = true; P.ground = null;
+  if (P.state === 'dash' || inp.dashHeld) P.dashJump = true;
+  P.state = 'move'; P.h = 46; P.oneShot = null;
+  setAnim('Jump', 3, 18, false, 5);
+  dust(P.x, P.y, 5, 0);
+}
+function doWallJump(side) {
+  buf.jump = 0;
+  P.dashJump = inp.dashHeld;
+  P.vx = -side * (P.dashJump ? T.dashSpeed : T.wallJumpVx);
+  P.vy = -T.wallJumpVy; P.lock = T.wallJumpLock; P.face = -side; P.canCut = true;
+  P.state = 'move'; P.wjT = 0.3; P.airSwings = 0;
+  setAnim('WallJump', 2, 32, false, 14);
+  stats.wjChain++; stats.wjBest = Math.max(stats.wjBest, stats.wjChain);
+  dust(P.x + side * 9, P.y - 20, 6, -side);
+}
+function enterWall(side) {
+  P.state = 'wall'; P.wallSide = side; P.face = -side; P.stickT = T.wallStick; P.dashJump = false; P.airSwings = 0;
+  setAnim('WallJump', 0, 0, false, 0);
+}
+function startDash(dir) {
+  buf.dash = 0;
+  P.state = 'dash'; P.dashT = T.dashTime; if (dir) P.face = dir; P.h = 26; P.oneShot = null;
+  setAnim('Slide', 1, 24, false, 8);
+  dust(P.x - P.face * 8, P.y, 6, -P.face);
+}
+function startAttack(i, dir) {
+  buf.attack = 0;
+  P.state = 'attack'; P.combo = i; P.queued = false; P.hitSet.clear(); P.h = 46; P.oneShot = null;
+  if (dir) P.face = dir;
+  const c = GROUND[i];
+  setAnim(c.anim, c.from, c.fps * T.atkSpeed, false, c.end);
+  if (i === 2) stats.full++;
+}
+function startAirAttack(dir) {
+  buf.attack = 0;
+  if (P.airSwings >= AIR.length) return false;
+  const i = P.airSwings++;
+  P.state = 'aatk'; P.combo = i; P.queued = false; P.hitSet.clear(); P.h = 46; P.lock = 0;
+  if (dir) P.face = dir;
+  const c = AIR[i];
+  setAnim(c.anim, c.from, c.fps * T.atkSpeed, false, c.end);
+  if (!c.spike) P.vy = Math.min(P.vy, 40);
+  if (i === 2) stats.full++;
+  return true;
+}
+function gravityStep(dt, mul) { P.vy = Math.min(P.vy + T.gravity * (mul || 1) * dt, T.maxFall); }
+
+function moveState(dt, dir) {
+  if (P.lock <= 0) {
+    const maxV = P.dashJump && !P.onGround ? T.dashSpeed * 0.92 : T.runSpeed;
+    P.vx = approach(P.vx, dir * maxV, (P.onGround ? T.groundAccel : T.airAccel) * dt);
+    if (dir) P.face = dir;
+  }
+  gravityStep(dt);
+  if (!inp.jumpHeld && P.vy < 0 && P.canCut) { P.vy *= T.jumpCut; P.canCut = false; }
+  if (buf.attack > 0) {
+    if (P.onGround) { startAttack(P.comboWin > 0 ? P.nextCombo : 0, dir); return; }
+    if (startAirAttack(dir)) return;
+  }
+  if (buf.dash > 0 && P.onGround) { startDash(dir); return; }
+  if (buf.jump > 0) {
+    if (P.onGround || P.coyote > 0) doJump();
+    else { const ws = wallSideOf(P, T.wallGrace); if (ws) doWallJump(ws); }
+  }
+  if (!P.onGround && P.vy > 0 && P.lock <= 0) {
+    const ws = wallSideOf(P, 1.5);
+    if (ws && dir === ws) enterWall(ws);
+  }
+}
+function wallState(dt, dir) {
+  P.vx = P.wallSide * 20;
+  P.vy = approach(P.vy, T.wallSlide, 3000 * dt);
+  if (dir === P.wallSide) P.stickT = T.wallStick; else P.stickT -= dt;
+  if (buf.jump > 0) { doWallJump(P.wallSide); return; }
+  if (buf.attack > 0) { P.state = 'move'; P.face = -P.wallSide; P.vx = 0; startAirAttack(0); return; }
+  if (P.stickT <= 0) { P.state = 'move'; P.vx = -P.wallSide * 30; }
+  if (Math.random() < dt * 14) dust(P.x + P.wallSide * 9, P.y - 30, 1, -P.wallSide, 0.5);
+}
+function dashState(dt, dir) {
+  P.vx = P.face * T.dashSpeed;
+  gravityStep(dt);
+  P.dashT -= dt;
+  if (buf.jump > 0 && (P.onGround || P.coyote > 0)) { P.dashJump = true; doJump(); return; }
+  if (buf.attack > 0) { P.h = 46; startAttack(0, dir); P.vx = P.face * T.dashSpeed * 0.5; return; }
+  if (!P.onGround) { P.state = 'move'; P.dashJump = true; P.h = 46; return; }
+  if (dir === -P.face) P.dashT = 0;
+  if (P.dashT <= 0) {
+    P.state = 'move'; P.h = 46; P.vx = P.face * T.runSpeed;
+    P.oneShot = { name: 'Slide', from: 9, to: 15, fps: 32 };
+  }
+}
+function attackState(dt, dir) {
+  const c = GROUND[P.combo], f = P.anim.f;
+  if (f < c.hit[1] + 1) P.vx = P.face * c.lunge; else P.vx = approach(P.vx, 0, 2400 * dt);
+  gravityStep(dt);
+  if (buf.attack > 0 && P.combo < 2) { P.queued = true; buf.attack = 0; }
+  if (f >= c.hit[0] && f < c.hit[1] + 1) doHits(c);
+  if (P.queued && f >= c.cancel) { startAttack(P.combo + 1, dir); return; }
+  if (f >= c.hit[1] + 1) {
+    if (buf.jump > 0 && P.onGround) { doJump(); return; }
+    if (buf.dash > 0 && P.onGround) { startDash(dir); return; }
+    if (dir && f >= c.cancel + 2) { P.state = 'move'; P.comboWin = 0.3; P.nextCombo = (P.combo + 1) % 3; return; }
+  }
+  if (P.anim.done) { P.state = 'move'; P.comboWin = 0.3; P.nextCombo = (P.combo + 1) % 3; }
+}
+function airAttackState(dt, dir) {
+  const c = AIR[P.combo], f = P.anim.f;
+  P.vx = approach(P.vx, dir * T.runSpeed * 0.6, T.airAccel * 0.5 * dt);
+  if (c.spike) {
+    if (f < c.hit[0]) P.vy = approach(P.vy, 0, 4000 * dt);
+    else P.vy = Math.max(P.vy, 420);
+  } else if (f < c.hit[1] + 1) P.vy = approach(P.vy, 30, 4000 * dt);
+  else gravityStep(dt, 0.45);
+  if (buf.attack > 0 && P.airSwings < AIR.length) { P.queued = true; buf.attack = 0; }
+  if (f >= c.hit[0] && f < c.hit[1] + 1) doHits(c, true);
+  if (P.queued && f >= c.cancel) { startAirAttack(dir); return; }
+  if (f >= c.hit[1] + 1 && buf.jump > 0) {
+    const ws = wallSideOf(P, T.wallGrace);
+    if (ws) { doWallJump(ws); return; }
+  }
+  if (P.anim.done || (P.onGround && f >= c.hit[1] + 1)) { P.state = 'move'; P.canCut = false; }
+}
+
+function moveAnim(dir) {
+  if (P.onGround) {
+    if (dir) { if (P.anim.name !== 'Run') setAnim('Run', 0, 24, true); P.oneShot = null; }
+    else if (P.oneShot) {
+      const o = P.oneShot;
+      if (P.anim.tag !== 'os') setAnim(o.name, o.from, o.fps, false, o.to, 'os');
+      if (P.anim.done) P.oneShot = null;
+    } else if (P.anim.name !== 'Idle') setAnim('Idle', 0, 12, true);
+  } else {
+    if (P.wjT > 0) { if (P.anim.name !== 'WallJump') setAnim('WallJump', 2, 32, false, 14); }
+    else if (P.vy < -60) { if (P.anim.name !== 'Jump') setAnim('Jump', 3, 18, false, 5); }
+    else if (P.anim.tag !== 'fall') setAnim('Landing', 0, 14, false, 2, 'fall');
+  }
+}
+
+function updatePlayer(dt) {
+  const dir = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
+  P.coyote -= dt; P.lock -= dt; P.comboWin -= dt; P.wjT -= dt;
+  if (P.onGround) {
+    P.coyote = T.coyote; P.airSwings = 0; if (P.state !== 'dash') P.dashJump = false;
+    if (stats.wjChain) stats.wjChain = 0;
+  }
+  if (P.ground === mover && mover) P.x += mover.dx;
+  switch (P.state) {
+    case 'move': moveState(dt, dir); break;
+    case 'wall': wallState(dt, dir); break;
+    case 'dash': dashState(dt, dir); break;
+    case 'attack': attackState(dt, dir); break;
+    case 'aatk': airAttackState(dt, dir); break;
+  }
+  P.prevVy = P.vy;
+  P.wasGround = P.onGround;
+  moveBody(P, dt);
+  if (P.onGround && !P.wasGround) {
+    P.dashJump = P.state === 'dash';
+    if (P.state === 'wall') P.state = 'move';
+    if (P.state === 'move' && P.impactVy > 380) { P.oneShot = { name: 'Landing', from: 3, to: 8, fps: 30 }; dust(P.x, P.y, 6, 0); }
+  }
+  if (P.state === 'wall' && wallSideOf(P, 2) !== P.wallSide) P.state = 'move';
+  if (P.state === 'move') moveAnim(dir);
+  stepAnim(P.anim, dt);
+  // bóng mờ khi lướt / lướt-nhảy
+  P.trailT -= dt;
+  if ((P.state === 'dash' || (P.dashJump && !P.onGround)) && P.trailT <= 0) {
+    P.trailT = 0.035;
+    P.trail.push({ name: P.anim.name, f: Math.floor(P.anim.f), x: P.x, y: P.y, face: P.face, life: 0.2 });
+  }
+}
+
+// ============ Trúng đòn ============
+function doHits(c, air) {
+  const b = c.box, f = P.face;
+  const x0 = f > 0 ? P.x + b[0] * S : P.x - b[1] * S, x1 = f > 0 ? P.x + b[1] * S : P.x - b[0] * S;
+  const hb = [x0, x1, P.y + b[2] * S, P.y + b[3] * S];
+  for (const t of targets) {
+    if (P.hitSet.has(t) || !overlap(hb, boxOf(t))) continue;
+    P.hitSet.add(t);
+    hitTarget(t, c, air);
+  }
+}
+function hitTarget(t, c, air) {
+  const m = t.kind === 'fly' ? 0.6 : 1;
+  t.vx = P.face * c.kb[0] * m;
+  t.vy = c.kb[1] * (t.kind === 'fly' ? 0.5 : 1);
+  if (t.kind === 'bag') { t.onGround = false; t.ground = null; t.idle = 0; }
+  t.flash = 0.12; t.squash = 1;
+  hitstop = Math.max(hitstop, c.stop * T.hitstop);
+  let sh = c.shake, anyCrit = false;
+  // số sát thương xếp chồng kiểu MapleStory
+  if (t.numT > 0.45) t.numY = 0;
+  const bx = boxOf(t), cx = (bx[0] + bx[1]) / 2, top = bx[2];
+  for (let i = 0; i < c.lines; i++) {
+    const crit = Math.random() < T.crit; anyCrit = anyCrit || crit;
+    const dmg = Math.round(rnd(c.dmg[0], c.dmg[1]) * (crit ? 1.8 : 1));
+    nums.push({ x: cx + rnd(-4, 4), y: top - 8 - t.numY, txt: String(dmg), crit, t: -i * 0.05, life: 0.9 });
+    t.numY += crit ? 24 : 18;
+  }
+  t.numT = 0;
+  if (anyCrit) sh += 4;
+  shake = Math.max(shake, sh);
+  combo.hits++; combo.t = 2.5; combo.pop = 1;
+  // tia sáng
+  const hx = clamp(P.x + P.face * 26, bx[0], bx[1]), hy = (bx[2] + bx[3]) / 2;
+  fx.push({ type: 'slash', x: hx, y: hy, ang: (c.kb[1] > 200 ? 1.1 : c.kb[1] < -300 ? -1.0 : rnd(-0.4, 0.4)) * P.face, len: 40 + c.lines * 10, life: 0.13, max: 0.13 });
+  fx.push({ type: 'ring', x: hx, y: hy, r: 6, life: 0.18, max: 0.18, crit: anyCrit });
+  for (let i = 0; i < 7 + c.lines * 2; i++) {
+    const a = rnd(-0.9, 0.9) + (P.face > 0 ? 0 : Math.PI), sp = rnd(160, 420);
+    fx.push({ type: 'spark', x: hx, y: hy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, life: rnd(0.15, 0.3), max: 0.3 });
+  }
+}
+
+// ============ Bao cát & quái bay tập ============
+function updateBag(b, dt) {
+  b.idle += dt;
+  b.vy = Math.min(b.vy + 1500 * dt, 700);
+  if (b.onGround) b.vx = approach(b.vx, 0, 900 * dt);
+  if (b.ground === mover) b.x += mover.dx;
+  moveBody(b, dt);
+  if (b.hitWall) { b.vx = -b.wallVx * 0.45; if (Math.abs(b.wallVx) > 150) { shake = Math.max(shake, 2); dust(b.x + b.hitWall * 13, b.y - 20, 4, -b.hitWall); } }
+  if (b.onGround && b.impactVy > 320) { b.vy = -b.impactVy * 0.35; b.onGround = false; b.squash = 0.8; dust(b.x, b.y, 6, 0); b.impactVy = 0; }
+  b.rot = b.onGround ? approach(b.rot, 0, 8 * dt) : clamp(b.rot + b.vx * dt * 0.02, -0.9, 0.9);
+  if (b.idle > 5 && Math.abs(b.x - b.hx) > 30) {
+    poof(b.x, b.y - 20);
+    b.x = b.hx; b.y = FLOOR; b.vx = b.vy = 0; b.idle = 0; b.rot = 0;
+    poof(b.x, b.y - 20);
+  }
+}
+function updateFly(f, dt) {
+  f.t += dt;
+  const ty = f.ay + Math.sin(f.t * 2.2) * 6;
+  f.vx += ((f.ax - f.x) * 14 - f.vx * 4.5) * dt;
+  f.vy += ((ty - f.y) * 14 - f.vy * 4.5) * dt;
+  f.x += f.vx * dt; f.y += f.vy * dt;
+  if (f.x < WALL + 15) { f.x = WALL + 15; f.vx = Math.abs(f.vx) * 0.5; }
+  if (f.x > AW - WALL - 15) { f.x = AW - WALL - 15; f.vx = -Math.abs(f.vx) * 0.5; }
+  if (f.y > FLOOR - 15) { f.y = FLOOR - 15; f.vy = -Math.abs(f.vy) * 0.5; }
+  if (f.y < 15) { f.y = 15; f.vy = Math.abs(f.vy) * 0.5; }
+}
+
+// ============ Hiệu ứng ============
+function dust(x, y, n, dir, sz) {
+  for (let i = 0; i < n; i++) fx.push({ type: 'dust', x: x + rnd(-4, 4), y: y - rnd(0, 4), vx: dir * rnd(20, 90) + rnd(-30, 30), vy: -rnd(10, 60), r: rnd(2, 4.5) * (sz || 1), life: rnd(0.25, 0.45), max: 0.45 });
+}
+function poof(x, y) { for (let i = 0; i < 12; i++) { const a = rnd(0, 6.28); fx.push({ type: 'dust', x, y, vx: Math.cos(a) * 80, vy: Math.sin(a) * 80, r: rnd(3, 6), life: 0.4, max: 0.4 }); } }
+function updateFx(dt) {
+  for (let i = fx.length - 1; i >= 0; i--) {
+    const p = fx[i]; p.life -= dt;
+    if (p.life <= 0) { fx.splice(i, 1); continue; }
+    if (p.type === 'dust') { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 1 - 3 * dt; p.vy *= 1 - 3 * dt; }
+    else if (p.type === 'spark') { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 900 * dt; p.vx *= 1 - 4 * dt; }
+    else if (p.type === 'ring') p.r += 260 * dt;
+  }
+  for (let i = nums.length - 1; i >= 0; i--) { const n = nums[i]; n.t += dt; if (n.t > n.life) nums.splice(i, 1); }
+  for (let i = P.trail.length - 1; i >= 0; i--) { P.trail[i].life -= dt; if (P.trail[i].life <= 0) P.trail.splice(i, 1); }
+  for (const t of targets) { t.flash = Math.max(0, t.flash - dt); t.squash = Math.max(0, t.squash - dt * 5); t.numT += dt; }
+  shake *= Math.pow(1e-5, dt); if (shake < 0.05) shake = 0;
+  combo.pop = Math.max(0, combo.pop - dt * 6);
+  if (combo.t > 0) { combo.t -= dt; if (combo.t <= 0) combo.hits = 0; }
+}
+
+// ============ Vòng lặp ============
+const STEP = 1 / 120;
+let acc = 0, last = 0;
+function step(dt) {
+  mover.t += dt;
+  const nx = mover.cx + Math.sin(mover.t * 0.9) * mover.amp;
+  mover.dx = nx - mover.x; mover.x = nx;
+  for (const k in buf) buf[k] -= dt;
+  updatePlayer(dt);
+  for (const t of targets) t.kind === 'bag' ? updateBag(t, dt) : updateFly(t, dt);
+  if (stats.started) stats.time += dt;
+}
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
+  readInput();
+  updateFx(dt);
+  if (hitstop > 0) hitstop -= dt;
+  else { acc += dt; while (acc >= STEP) { step(STEP); acc -= STEP; } }
+  render();
+  requestAnimationFrame(frame);
+}
+
+// ============ Màn hình ============
+const ctx = cv.getContext('2d');
+let cssW = 0, cssH = 0, dpr = 1, scale = 1, offX = 0, offY = 0;
+let bg = document.createElement('canvas');
+function safeInset(name) { return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0; }
+function resize() {
+  cssW = innerWidth; cssH = innerHeight; dpr = Math.min(devicePixelRatio || 1, 2.5);
+  cv.width = Math.round(cssW * dpr); cv.height = Math.round(cssH * dpr);
+  scale = Math.min(cssH / H, cssW / 560);
+  const newAW = Math.round(clamp(cssW / scale, 560, 860));
+  offX = (cssW - newAW * scale) / 2; offY = (cssH - H * scale) / 2;
+  if (newAW !== AW || !mover) {
+    AW = newAW; buildLevel();
+    if (!targets.length) targets = [makeBag(AW * 0.42), makeBag(AW * 0.7), makeFly(AW * 0.5, 72)];
+    targets[0].hx = AW * 0.42; targets[1].hx = AW * 0.7; targets[2].ax = AW * 0.5;
+    for (const b of [P, targets[0], targets[1]]) b.x = clamp(b.x, WALL + 14, AW - WALL - 14);
+  }
+  layoutControls();
+  bakeBg();
+}
+function layoutControls() {
+  const R = clamp(cssH * 0.1, 30, 54) * T.btn;
+  const sl = safeInset('--sal'), sr = safeInset('--sar'), sb = safeInset('--sab');
+  const pl = 16 + sl, pr = 16 + sr, pb = 12 + sb;
+  ctrls.left = { x: pl + R, y: cssH - pb - R * 1.1, r: R, label: '◀' };
+  ctrls.right = { x: pl + R * 3.4, y: cssH - pb - R * 1.1, r: R, label: '▶' };
+  ctrls.attack = { x: cssW - pr - R * 1.2, y: cssH - pb - R * 1.2, r: R * 1.2, label: 'Chém' };
+  ctrls.jump = { x: ctrls.attack.x - R * 2.6, y: cssH - pb - R * 0.95, r: R, label: 'Nhảy' };
+  ctrls.dash = { x: ctrls.attack.x - R * 0.3, y: ctrls.attack.y - R * 2.5, r: R * 0.85, label: 'Lướt' };
+}
+function rr(c, x, y, w, h, r) { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); }
+function bakeBg() {
+  const k = scale * dpr;
+  bg.width = Math.ceil(AW * k) + 2; bg.height = Math.ceil(H * k) + 2;
+  const g = bg.getContext('2d');
+  g.setTransform(k, 0, 0, k, 0, 0);
+  // trời đêm xanh lạnh để kiếm sĩ áo đỏ nổi lên
+  const sky = g.createLinearGradient(0, 0, 0, FLOOR);
+  sky.addColorStop(0, '#0d1320'); sky.addColorStop(0.6, '#1a2337'); sky.addColorStop(1, '#27304a');
+  g.fillStyle = sky; g.fillRect(0, 0, AW, H);
+  // trăng
+  const mx = AW * 0.73, my = 64;
+  const glow = g.createRadialGradient(mx, my, 10, mx, my, 120);
+  glow.addColorStop(0, 'rgba(255,236,214,.28)'); glow.addColorStop(1, 'rgba(255,236,214,0)');
+  g.fillStyle = glow; g.fillRect(mx - 120, my - 120, 240, 240);
+  g.fillStyle = '#f4e6d4'; g.beginPath(); g.arc(mx, my, 30, 0, Math.PI * 2); g.fill();
+  // núi xa
+  g.fillStyle = '#18203a';
+  g.beginPath(); g.moveTo(0, 230);
+  for (let x = 0; x <= AW; x += 40) g.lineTo(x, 200 - Math.sin(x * 0.011) * 40 - Math.sin(x * 0.031) * 14);
+  g.lineTo(AW, FLOOR); g.lineTo(0, FLOOR); g.fill();
+  g.fillStyle = '#141a2e';
+  g.beginPath(); g.moveTo(0, 260);
+  for (let x = 0; x <= AW; x += 30) g.lineTo(x, 245 - Math.sin(x * 0.017 + 2) * 22 - Math.sin(x * 0.05) * 6);
+  g.lineTo(AW, FLOOR); g.lineTo(0, FLOOR); g.fill();
+  // cột đấu trường phía sau
+  for (const px of [AW * 0.3, AW * 0.5, AW * 0.7]) {
+    g.fillStyle = 'rgba(10,14,26,.55)'; g.fillRect(px - 9, 120, 18, FLOOR - 120);
+    g.fillRect(px - 14, 112, 28, 10);
+  }
+  // sàn
+  const fl = g.createLinearGradient(0, FLOOR, 0, H);
+  fl.addColorStop(0, '#2b2f40'); fl.addColorStop(1, '#141722');
+  g.fillStyle = fl; g.fillRect(0, FLOOR, AW, H - FLOOR);
+  g.fillStyle = '#6f7a99'; g.fillRect(0, FLOOR, AW, 2);
+  g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = 1;
+  for (let x = 0; x < AW; x += 48) { g.beginPath(); g.moveTo(x + (Math.floor(x / 48) % 2) * 24, FLOOR + 2); g.lineTo(x + (Math.floor(x / 48) % 2) * 24, FLOOR + 22); g.stroke(); }
+  g.beginPath(); g.moveTo(0, FLOOR + 22); g.lineTo(AW, FLOOR + 22); g.stroke();
+  // tường
+  for (const [x0, edge] of [[0, WALL], [AW - WALL, AW - WALL]]) {
+    const wg = g.createLinearGradient(x0, 0, x0 + WALL, 0);
+    wg.addColorStop(0, x0 === 0 ? '#151926' : '#262b3c'); wg.addColorStop(1, x0 === 0 ? '#262b3c' : '#151926');
+    g.fillStyle = wg; g.fillRect(x0, 0, WALL, FLOOR);
+    g.strokeStyle = 'rgba(0,0,0,.3)';
+    for (let y = 0; y < FLOOR; y += 22) {
+      g.beginPath(); g.moveTo(x0, y); g.lineTo(x0 + WALL, y); g.stroke();
+      const mxw = x0 + ((y / 22) % 2 ? WALL * 0.35 : WALL * 0.7);
+      g.beginPath(); g.moveTo(mxw, y); g.lineTo(mxw, y + 22); g.stroke();
+    }
+    g.fillStyle = '#7d89aa'; g.fillRect(edge - (x0 === 0 ? 2 : 0), 0, 2, FLOOR);
+  }
+  // bục cố định
+  for (const p of plats) if (!p.moving) drawPlat(g, p);
+}
+function drawPlat(g, p) {
+  g.fillStyle = '#3a3346'; g.fillRect(p.x, p.y, p.w, p.h);
+  g.fillStyle = '#d49a6a'; g.fillRect(p.x, p.y, p.w, 2);
+  g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(p.x, p.y + p.h - 3, p.w, 3);
+}
+
+function drawSprite(name, fi, x, y, face, alpha, ox) {
+  const img = IMG[name]; if (!img) return;
+  fi = clamp(Math.floor(fi), 0, ANIMS[name].n - 1);
+  ctx.save();
+  ctx.translate(x, y); ctx.scale(face * S, S);
+  if (alpha !== undefined) ctx.globalAlpha = alpha;
+  ctx.drawImage(img, fi * 128, 0, 128, 128, -64 + (ox || 0), -100, 128, 128);
+  ctx.restore();
+}
+function drawBag(b) {
+  const jit = hitstop > 0 && b.flash > 0 ? rnd(-2, 2) : 0;
+  if (b.onGround) { ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(b.x, b.y, 15, 3, 0, 0, 6.29); ctx.fill(); }
+  ctx.save();
+  ctx.translate(b.x + jit, b.y - b.h / 2); ctx.rotate(b.rot);
+  const st = clamp(-b.vy / 2200, -0.18, 0.18), sq = b.squash * 0.22;
+  ctx.scale(1 + sq - st * 0.6, 1 - sq + st);
+  const gr = ctx.createLinearGradient(-13, 0, 13, 0);
+  gr.addColorStop(0, '#9a6b3f'); gr.addColorStop(0.5, '#d2a46c'); gr.addColorStop(1, '#8a5d35');
+  ctx.fillStyle = gr; rr(ctx, -13, -20, 26, 40, 9); ctx.fill();
+  ctx.fillStyle = '#5b3a20'; ctx.fillRect(-13, -9, 26, 3); ctx.fillRect(-13, 8, 26, 3);
+  ctx.strokeStyle = '#2b1a10'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(-7, -16); ctx.lineTo(-2, -13); ctx.moveTo(7, -16); ctx.lineTo(2, -13); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-5, -4); ctx.quadraticCurveTo(0, -7, 5, -4); ctx.stroke();
+  if (b.flash > 0) { ctx.globalAlpha = Math.min(1, b.flash / 0.08); ctx.fillStyle = '#fff'; rr(ctx, -13, -20, 26, 40, 9); ctx.fill(); }
+  ctx.restore();
+}
+function drawFly(f, time) {
+  const jit = hitstop > 0 && f.flash > 0 ? rnd(-2, 2) : 0;
+  ctx.save(); ctx.translate(f.x + jit, f.y);
+  const s = 1 + f.squash * 0.25; ctx.scale(s, 2 - s);
+  const flap = Math.sin(time * 14) * 0.6;
+  ctx.fillStyle = '#4b3a6e';
+  for (const sd of [-1, 1]) {
+    ctx.save(); ctx.scale(sd, 1); ctx.rotate(-flap);
+    ctx.beginPath(); ctx.moveTo(8, -2); ctx.quadraticCurveTo(24, -18, 34, -6); ctx.quadraticCurveTo(26, -4, 24, 4); ctx.quadraticCurveTo(18, 0, 8, 4); ctx.fill();
+    ctx.restore();
+  }
+  const gr = ctx.createRadialGradient(-4, -5, 2, 0, 0, 15);
+  gr.addColorStop(0, '#8a6bc4'); gr.addColorStop(1, '#2a1846');
+  ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, 0, 13, 0, 6.29); ctx.fill();
+  const lx = clamp((P.x - f.x) * 0.05, -4, 4), ly = clamp((P.y - 30 - f.y) * 0.05, -3, 3);
+  ctx.fillStyle = '#f2f2f2'; ctx.beginPath(); ctx.arc(0, -1, 6, 0, 6.29); ctx.fill();
+  ctx.fillStyle = '#ff3d64'; ctx.beginPath(); ctx.arc(lx, -1 + ly, 3, 0, 6.29); ctx.fill();
+  if (f.flash > 0) { ctx.globalAlpha = Math.min(1, f.flash / 0.08); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 14, 0, 6.29); ctx.fill(); }
+  ctx.restore();
+}
+function drawNumbers() {
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
+  for (const n of nums) {
+    if (n.t < 0) continue;
+    const pop = n.t < 0.08 ? 1.6 - (n.t / 0.08) * 0.6 : 1;
+    const rise = (1 - Math.pow(1 - Math.min(1, n.t / n.life), 3)) * 22;
+    const a = n.t > n.life - 0.3 ? (n.life - n.t) / 0.3 : 1;
+    const size = (n.crit ? 21 : 16) * pop;
+    ctx.save(); ctx.globalAlpha = Math.max(0, a); ctx.translate(n.x, n.y - rise);
+    ctx.font = `italic 900 ${size}px "Arial Black", system-ui, sans-serif`;
+    const gr = ctx.createLinearGradient(0, -size, 0, 0);
+    if (n.crit) { gr.addColorStop(0, '#fff0f6'); gr.addColorStop(0.45, '#ff8fb2'); gr.addColorStop(1, '#ff1f5a'); }
+    else { gr.addColorStop(0, '#fff6c9'); gr.addColorStop(0.45, '#ffc14d'); gr.addColorStop(1, '#ff7a1a'); }
+    ctx.lineWidth = 4; ctx.strokeStyle = n.crit ? '#3d0717' : '#3a1606'; ctx.strokeText(n.txt, 0, 0);
+    ctx.fillStyle = gr; ctx.fillText(n.txt, 0, 0);
+    if (n.crit) {
+      ctx.font = `italic 900 ${11 * pop}px "Arial Black", system-ui, sans-serif`;
+      ctx.lineWidth = 3; ctx.strokeStyle = '#3d0717'; ctx.strokeText('CRIT', -size * 1.5, -size * 0.55);
+      ctx.fillStyle = '#ffe45c'; ctx.fillText('CRIT', -size * 1.5, -size * 0.55);
+    }
+    ctx.restore();
+  }
+}
+function drawFx() {
+  for (const p of fx) {
+    const a = p.life / p.max;
+    if (p.type === 'dust') { ctx.globalAlpha = a * 0.6; ctx.fillStyle = '#c8cee0'; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (1.4 - a * 0.4), 0, 6.29); ctx.fill(); }
+    else if (p.type === 'spark') {
+      ctx.globalAlpha = Math.min(1, a * 1.5); ctx.strokeStyle = '#ffe7b0'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * 0.025, p.y - p.vy * 0.025); ctx.stroke();
+    } else if (p.type === 'ring') {
+      ctx.globalAlpha = a; ctx.strokeStyle = p.crit ? '#ff6b94' : '#ffffff'; ctx.lineWidth = 3 * a + 0.5;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.29); ctx.stroke();
+    } else if (p.type === 'slash') {
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.ang);
+      const l = p.len * (1.2 - a * 0.2);
+      ctx.globalAlpha = a; ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.moveTo(-l / 2, 0); ctx.quadraticCurveTo(0, -4 * a - 1, l / 2, 0); ctx.quadraticCurveTo(0, 4 * a + 1, -l / 2, 0); ctx.fill();
+      ctx.globalAlpha = a * 0.5; ctx.fillStyle = '#ff5a3c';
+      ctx.beginPath(); ctx.moveTo(-l / 2.4, 0); ctx.quadraticCurveTo(0, -9 * a, l / 2.4, 0); ctx.quadraticCurveTo(0, 9 * a, -l / 2.4, 0); ctx.fill();
+      ctx.restore();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+function drawControls() {
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const k of ['left', 'right', 'jump', 'attack', 'dash']) {
+    const c = ctrls[k], on = tc[k];
+    ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, 6.29);
+    ctx.fillStyle = on ? 'rgba(255,179,92,.5)' : k === 'attack' ? 'rgba(230,70,70,.22)' : 'rgba(255,255,255,.1)'; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = on ? 'rgba(255,214,160,.9)' : 'rgba(255,255,255,.32)'; ctx.stroke();
+    ctx.fillStyle = on ? '#fff' : 'rgba(255,255,255,.8)';
+    ctx.font = `600 ${k === 'left' || k === 'right' ? c.r * 0.6 : c.r * 0.36}px system-ui, sans-serif`;
+    ctx.fillText(c.label, c.x, c.y + 1);
+  }
+}
+function drawHud() {
+  // bộ đếm combo
+  if (combo.hits >= 2) {
+    const a = Math.min(1, combo.t / 0.5), x = cssW - 18 - safeR, y = 78;
+    const mult = combo.hits >= 25 ? 3 : combo.hits >= 10 ? 2 : 1;
+    ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
+    const sz = 34 * (1 + combo.pop * 0.35);
+    ctx.font = `italic 900 ${sz}px "Arial Black", system-ui, sans-serif`;
+    ctx.lineWidth = 5; ctx.strokeStyle = '#3a1606'; ctx.strokeText(combo.hits, x - 44, y);
+    ctx.fillStyle = '#fff1d6'; ctx.fillText(combo.hits, x - 44, y);
+    ctx.font = 'italic 900 15px "Arial Black", system-ui, sans-serif';
+    ctx.lineWidth = 4; ctx.strokeText('HIT', x, y - 2); ctx.fillStyle = '#ffb35c'; ctx.fillText('HIT', x, y - 2);
+    if (mult > 1) {
+      ctx.font = 'italic 900 16px "Arial Black", system-ui, sans-serif';
+      ctx.strokeText('ĐIỂM x' + mult, x, y + 20); ctx.fillStyle = '#ffe45c'; ctx.fillText('ĐIỂM x' + mult, x, y + 20);
+    }
+    ctx.restore();
+  }
+  // số đo cho giả thuyết: một dòng nhỏ giữa mép trên, không che đấu trường
+  const m = Math.floor(stats.time / 60), s = Math.floor(stats.time % 60);
+  const okW = stats.wjBest >= 3, okC = stats.full >= 5;
+  const parts = [
+    [`Đạp tường ${stats.wjChain} (cao nhất ${stats.wjBest}/3${okW ? ' ✓' : ''})`, okW ? '#8ef0a8' : '#e9edf5'],
+    [`Combo 3 nhát ${stats.full}/5${okC ? ' ✓' : ''}`, okC ? '#8ef0a8' : '#e9edf5'],
+    [stats.started ? `${m}:${String(s).padStart(2, '0')}` : 'bấm nút bất kỳ để bắt đầu', stats.time > 120 ? '#ffb35c' : '#9aa6bd'],
+  ];
+  ctx.font = '600 11px system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  const gap = 14, widths = parts.map(p => ctx.measureText(p[0]).width);
+  const tw = widths.reduce((a, b) => a + b, 0) + gap * (parts.length - 1);
+  let x = (cssW - tw) / 2;
+  ctx.fillStyle = 'rgba(8,11,20,.5)'; rr(ctx, x - 10, 6, tw + 20, 20, 10); ctx.fill();
+  parts.forEach((p, i) => { ctx.fillStyle = p[1]; ctx.fillText(p[0], x, 16.5); x += widths[i] + gap; });
+}
+let safeL = 0, safeR = 0;
+function render() {
+  const k = scale * dpr;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#0b0f18'; ctx.fillRect(0, 0, cv.width, cv.height);
+  const sx = shake ? rnd(-1, 1) * shake : 0, sy = shake ? rnd(-1, 1) * shake : 0;
+  const ox = (offX + sx * scale) * dpr, oy = (offY + sy * scale) * dpr;
+  ctx.drawImage(bg, Math.round(ox), Math.round(oy));
+  ctx.setTransform(k, 0, 0, k, ox, oy);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  drawPlat(ctx, mover);
+  const time = performance.now() / 1000;
+  for (const t of targets) t.kind === 'bag' ? drawBag(t) : drawFly(t, time);
+  for (const g of P.trail) drawSprite(g.name, g.f, g.x, g.y, g.face, (g.life / 0.2) * 0.35);
+  const wallPose = P.state === 'wall';
+  drawSprite(P.anim.name, P.anim.f, P.x, P.y, P.face, 1, wallPose ? 13 : 0);
+  drawFx();
+  drawNumbers();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawControls();
+  drawHud();
+}
+
+// ============ Bảng chỉnh thông số ============
+const tuneEl = document.getElementById('tune');
+function buildTune() {
+  tuneEl.innerHTML = '';
+  for (const [key, label, min, max, st] of TUNE) {
+    const l = document.createElement('label');
+    l.innerHTML = `${label} <b></b>`;
+    const r = document.createElement('input');
+    r.type = 'range'; r.min = min; r.max = max; r.step = st; r.value = T[key];
+    const show = () => { l.querySelector('b').textContent = (+T[key]).toFixed(st < 1 ? 2 : 0); };
+    r.addEventListener('input', () => { T[key] = +r.value; show(); if (key === 'btn') layoutControls(); save(); });
+    show(); tuneEl.append(l, r);
+  }
+  const row = document.createElement('div'); row.className = 'row';
+  const reset = document.createElement('button'); reset.textContent = 'Mặc định';
+  reset.onclick = () => { Object.assign(T, DEFAULTS); save(); buildTune(); layoutControls(); };
+  const close = document.createElement('button'); close.textContent = 'Đóng';
+  close.onclick = () => { tuneEl.hidden = true; };
+  row.append(reset, close); tuneEl.append(row);
+}
+function save() { try { localStorage.setItem('ksbt-tune', JSON.stringify(T)); } catch (e) {} }
+document.getElementById('tuneBtn').onclick = () => { tuneEl.hidden = !tuneEl.hidden; if (!tuneEl.hidden) buildTune(); };
+document.getElementById('fsBtn').onclick = () => {
+  const el = document.documentElement;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+  if (!req) return;
+  try {
+    const p = req.call(el);
+    if (p && p.then) p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {})).catch(() => {});
+  } catch (e) {}
+};
+
+// ============ Khởi động ============
+addEventListener('resize', () => { resize(); safeL = safeInset('--sal'); safeR = safeInset('--sar'); });
+function boot() {
+  resize(); safeL = safeInset('--sal'); safeR = safeInset('--sar');
+  P.x = AW * 0.15; P.y = FLOOR;
+  setAnim('Idle', 0, 12, true);
+  document.getElementById('loading').remove();
+  window.__dbg = { P, T, stats, targets, combo };
+  requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
+}
+let pending = 0;
+for (const name in ANIMS) {
+  pending++;
+  const img = new Image();
+  img.onload = () => { IMG[name] = img; if (--pending === 0) boot(); };
+  img.onerror = () => { document.getElementById('loading').textContent = 'Không tải được sprites/' + ANIMS[name].file; };
+  img.src = 'sprites/' + ANIMS[name].file;
+}
+</script>
+</body>
+</html>
