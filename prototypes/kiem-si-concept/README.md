@@ -24,7 +24,11 @@ vừa bám/đạp tường, vừa ra combo hay không.
 
 ## Cách chạy
 
-- Mở `prototype.html` bằng trình duyệt, không cần server (thư mục `sprites/` phải nằm cạnh file).
+- **Bản một file (khuyên dùng):** chạy `python3 build-standalone.py` để gói `prototype.html` + `sprites/`
+  thành `kiem-si-bat-tan.html` (~900 KB, ảnh nhúng sẵn). Mở bằng cách bấm đúp, gửi qua điện thoại được.
+  File này không commit (đã có trong `.gitignore`), cứ build lại khi cần.
+- Mở thẳng `prototype.html` bằng `file://` vẫn chơi được, nhưng trình duyệt không cho đọc điểm ảnh của
+  ảnh rời nên **không có hiệu ứng kiếm nguyên tố**. Bản một file và link claude.ai thì có.
 - Trên điện thoại: cầm ngang, bấm ⛶ để vào toàn màn hình (nếu trình duyệt cho phép).
 
 ### Điều khiển
@@ -47,10 +51,12 @@ trong trình duyệt. Kéo "Sát thương quái" về 0 là bất tử để th�
 
 ## Vòng chơi
 
-1. **Chọn 1 trong 3 kỹ năng** lúc bắt đầu:
-   - 🔥 Hỏa Kiếm: chém làm quái bị bỏng, mất máu thêm trong 2 giây
-   - ⚡ Lôi Kiếm: mỗi lần chém trúng, sét giật lan sang 3 con quái gần đó
-   - 🌙 Kiếm Khí: mỗi nhát chém bắn ra một luồng kiếm bay xa, xuyên qua quái
+1. **Chọn 1 trong 3 kỹ năng** lúc bắt đầu. Thanh kiếm và vệt chém đổi màu theo kỹ năng:
+   - 🔥 Hỏa Kiếm: chém làm quái bị bỏng, mất máu thêm trong 2 giây.
+     Kiếm cháy rực: lưỡi cam vàng, quầng lửa chập chờn, lưỡi lửa ôm thân kiếm và tàn lửa bay lên, vệt chém thành vòng lửa.
+   - ⚡ Lôi Kiếm: mỗi lần chém trúng, sét giật lan sang 3 con quái gần đó.
+     Kiếm điện: lưỡi xanh trắng, quầng xanh lóe sáng, tia điện chạy quanh lưỡi kiếm (chém thì nhiều tia hơn), vệt chém xanh điện.
+   - 🌙 Kiếm Khí: mỗi nhát chém bắn ra một luồng kiếm bay xa, xuyên qua quái. Kiếm phát sáng xanh ngọc nhẹ.
 2. **Màn 1–4: diệt quái.** Quái bò đất vào từ cổng ở chân hai bức tường, quái bay vào từ hai mép trên.
    Mỗi màn quái đông hơn, nhanh hơn, trâu hơn. Qua màn thì hồi 25 máu.
 
@@ -93,6 +99,11 @@ trong trình duyệt. Kéo "Sát thương quái" về 0 là bất tử để th�
   Các nhát bỏ bớt khung lấy đà đầu để bấm là ra đòn ngay (~0,13 giây).
 - Animation còn thiếu được bù bằng code như brief: trượt tường giữ khung 0 của WallJump, chém trên không dùng lại AttackSwing1.
 - Quái và boss vẽ bằng hình khối trên canvas (chưa có sprite).
+- **Tách lưỡi kiếm:** lưỡi kiếm và da tay/mặt cùng màu trắng, nên lúc tải game em lọc điểm ảnh trắng,
+  co 3x3: lưỡi kiếm mảnh bị bào mất, da dày còn lại. Mảng còn lại nhỏ (< 150 điểm) là da, nở lại 2 điểm
+  rồi loại ra; mảng rất lớn là vệt chém nên vẫn tính là kiếm. Sau đó tô màu theo bảng `PAL`, làm quầng sáng
+  (làm mờ hộp 2 lần, tính riêng từng khung) và lưu sẵn các điểm trên lưỡi kiếm của từng khung để toé lửa / phóng điện.
+  Mất khoảng 0,2 giây lúc tải và 0,2 giây lúc chọn kỹ năng (đo trên máy tính).
 
 ## Hình
 

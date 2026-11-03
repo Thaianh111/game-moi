@@ -126,6 +126,191 @@ const ANIMS = {
 };
 const IMG = {};
 
+// ============ Kiếm nguyên tố: tách lưỡi kiếm khỏi da tay/mặt rồi tô màu theo kỹ năng ============
+// Lưỡi kiếm và da đều trắng; lưỡi kiếm mảnh (bị bào mất khi co 3x3), da là mảng dày (còn lại).
+// Mảng dày rất lớn là vệt chém trong khung tấn công nên vẫn tính là "kiếm".
+const PAL = {
+  fire: { lo: [214, 38, 8], mid: [255, 140, 26], hi: [255, 240, 170], glow: [255, 96, 20], glowMul: 2.6 },
+  bolt: { lo: [24, 84, 235], mid: [70, 175, 255], hi: [232, 252, 255], glow: [70, 170, 255], glowMul: 2.4 },
+  wave: { lo: [20, 150, 130], mid: [60, 215, 185], hi: [230, 255, 248], glow: [60, 220, 190], glowMul: 1.5 },
+};
+let bladeData = null;      // tên anim -> { W, H, src, blade, pts[frame] }
+const VAR = {};            // kỹ năng -> tên anim -> { tint, glow }
+function analyzeBlades() {
+  const data = {};
+  for (const name in ANIMS) {
+    const img = IMG[name], n = ANIMS[name].n, W = img.width, H = img.height, N = W * H;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(img, 0, 0);
+    const src = g.getImageData(0, 0, W, H).data;   // ném lỗi nếu canvas bị "bẩn" (mở file:// với ảnh rời)
+    const white = new Uint8Array(N), core = new Uint8Array(N);
+    for (let i = 0, p = 0; i < N; i++, p += 4) {
+      const r = src[p], gg = src[p + 1], b = src[p + 2];
+      const mn = Math.min(r, gg, b), mx = Math.max(r, gg, b);
+      if (src[p + 3] > 60 && mn > 140 && mx - mn < 40) white[i] = 1;
+    }
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+      const fx0 = x % 128; if (fx0 === 0 || fx0 === 127) continue;
+      const i = y * W + x;
+      if (white[i] && white[i - 1] && white[i + 1] && white[i - W] && white[i + W] &&
+          white[i - W - 1] && white[i - W + 1] && white[i + W - 1] && white[i + W + 1]) core[i] = 1;
+    }
+    const label = new Int32Array(N), areas = [0], stack = [];
+    let L = 0;
+    for (let i = 0; i < N; i++) {
+      if (!core[i] || label[i]) continue;
+      L++; let area = 0; label[i] = L; stack.push(i);
+      while (stack.length) {
+        const j = stack.pop(), x = j % W; area++;
+        if (x % 128 !== 0 && core[j - 1] && !label[j - 1]) { label[j - 1] = L; stack.push(j - 1); }
+        if (x % 128 !== 127 && core[j + 1] && !label[j + 1]) { label[j + 1] = L; stack.push(j + 1); }
+        if (j >= W && core[j - W] && !label[j - W]) { label[j - W] = L; stack.push(j - W); }
+        if (j + W < N && core[j + W] && !label[j + W]) { label[j + W] = L; stack.push(j + W); }
+      }
+      areas.push(area);
+    }
+    const skin = new Uint8Array(N);
+    for (let i = 0; i < N; i++) {
+      if (!label[i] || areas[label[i]] >= 150) continue;
+      const x = i % W, y = (i / W) | 0;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+        const xx = x + dx, yy = y + dy;
+        if (xx >= 0 && xx < W && yy >= 0 && yy < H && ((xx / 128) | 0) === ((x / 128) | 0)) skin[yy * W + xx] = 1;
+      }
+    }
+    const blade = new Uint8Array(N);
+    for (let i = 0; i < N; i++) if (white[i] && !skin[i]) blade[i] = 1;
+    // điểm trên lưỡi kiếm của từng khung (để toé lửa / phóng điện)
+    const pts = [];
+    for (let f = 0; f < n; f++) {
+      const list = [];
+      for (let y = 0; y < 128; y++) for (let x = 0; x < 128; x++) if (blade[y * W + f * 128 + x]) list.push(x, y);
+      const cnt = list.length / 2, keep = Math.min(cnt, 90), out = new Int16Array(keep * 2);
+      for (let k = 0; k < keep; k++) { const j = Math.floor((k + Math.random()) * cnt / keep); out[k * 2] = list[j * 2]; out[k * 2 + 1] = list[j * 2 + 1]; }
+      pts.push(out);
+    }
+    data[name] = { W, H, src, blade, pts };
+  }
+  return data;
+}
+// làm mờ hộp; chiều ngang tính riêng từng khung 128px để quầng sáng không lem sang khung bên cạnh
+function boxBlur(a, W, H, r) {
+  const tmp = new Float32Array(W * H), out = new Float32Array(W * H), k = 1 / (2 * r + 1);
+  for (let y = 0; y < H; y++) for (let f0 = 0; f0 < W; f0 += 128) {
+    const o = y * W + f0, fw = Math.min(128, W - f0); let s = 0;
+    for (let x = -r; x <= r; x++) s += a[o + clamp(x, 0, fw - 1)];
+    for (let x = 0; x < fw; x++) { tmp[o + x] = s * k; s += a[o + Math.min(fw - 1, x + r + 1)] - a[o + Math.max(0, x - r)]; }
+  }
+  for (let x = 0; x < W; x++) {
+    let s = 0;
+    for (let y = -r; y <= r; y++) s += tmp[clamp(y, 0, H - 1) * W + x];
+    for (let y = 0; y < H; y++) { out[y * W + x] = s * k; s += tmp[Math.min(H - 1, y + r + 1) * W + x] - tmp[Math.max(0, y - r) * W + x]; }
+  }
+  return out;
+}
+function buildVariant(skill) {
+  if (VAR[skill] || !bladeData || !PAL[skill]) return VAR[skill];
+  const pal = PAL[skill], out = {};
+  for (const name in bladeData) {
+    const { W, H, src, blade } = bladeData[name], N = W * H;
+    const tint = document.createElement('canvas'); tint.width = W; tint.height = H;
+    const tg = tint.getContext('2d'), td = tg.createImageData(W, H), d = td.data;
+    d.set(src);
+    const alpha = new Float32Array(N);
+    for (let i = 0, p = 0; i < N; i++, p += 4) if (blade[i]) alpha[i] = src[p + 3] / 255;
+    const bl = boxBlur(boxBlur(alpha, W, H, 3), W, H, 3);
+    // lưỡi mảnh: tô theo độ sáng; vệt chém dày: lõi sáng, viền đậm màu (lửa cam đỏ / điện xanh)
+    for (let i = 0, p = 0; i < N; i++, p += 4) {
+      if (!blade[i]) continue;
+      const l = (src[p] + src[p + 1] + src[p + 2]) / 765;
+      const t = bl[i] < 0.38 ? Math.pow(clamp((l - 0.55) / 0.45, 0, 1), 1.5) : Math.pow(clamp((bl[i] - 0.45) / 0.5, 0, 1), 1.3) * clamp((l - 0.4) / 0.5, 0, 1);
+      const c = t < 0.5 ? [pal.lo, pal.mid, t * 2] : [pal.mid, pal.hi, t * 2 - 1];
+      d[p] = c[0][0] + (c[1][0] - c[0][0]) * c[2];
+      d[p + 1] = c[0][1] + (c[1][1] - c[0][1]) * c[2];
+      d[p + 2] = c[0][2] + (c[1][2] - c[0][2]) * c[2];
+    }
+    tg.putImageData(td, 0, 0);
+    const glow = document.createElement('canvas'); glow.width = W; glow.height = H;
+    const gg = glow.getContext('2d'), gd = gg.createImageData(W, H), e = gd.data;
+    for (let i = 0, p = 0; i < N; i++, p += 4) {
+      const a = Math.min(1, bl[i] * pal.glowMul);
+      if (a <= 0.01) continue;
+      e[p] = pal.glow[0]; e[p + 1] = pal.glow[1]; e[p + 2] = pal.glow[2]; e[p + 3] = a * 255;
+    }
+    gg.putImageData(gd, 0, 0);
+    out[name] = { tint, glow };
+  }
+  VAR[skill] = out;
+  return out;
+}
+function bladeWorld(px, py, ox) { return [P.x + P.face * (px - 64 + ox) * S, P.y + (py - 100) * S]; }
+function bladePts() {
+  if (!bladeData || !P.anim) return null;
+  const name = P.anim.name, fi = clamp(Math.floor(P.anim.f), 0, ANIMS[name].n - 1);
+  const pts = bladeData[name].pts[fi];
+  return pts && pts.length ? pts : null;
+}
+// lửa toé ra từ lưỡi kiếm (cập nhật theo thời gian thực)
+function swordFx(dt) {
+  if (G.mode !== 'play' || P.dead || !G.skill || !VAR[G.skill]) return;
+  const pts = bladePts(); if (!pts) return;
+  const n = pts.length / 2, ox = P.state === 'wall' ? 13 : 0;
+  const attacking = P.state === 'attack' || P.state === 'aatk';
+  if (G.skill === 'fire') {
+    // lưỡi lửa ôm sát thân kiếm + tàn lửa bay lên
+    let k = (attacking ? 220 : 120) * dt; k = Math.floor(k) + (Math.random() < k % 1 ? 1 : 0);
+    for (let i = 0; i < k; i++) {
+      const j = Math.floor(Math.random() * n), [x, y] = bladeWorld(pts[j * 2], pts[j * 2 + 1], ox);
+      const ember = Math.random() < 0.25;
+      fx.push(ember
+        ? { type: 'fire', x, y, vx: rnd(-30, 30) - P.vx * 0.15, vy: rnd(-170, -80), r: rnd(0.8, 1.6), life: rnd(0.3, 0.55), max: 0.55 }
+        : { type: 'fire', x: x + rnd(-1.5, 1.5), y, vx: rnd(-12, 12) - P.vx * 0.3, vy: rnd(-80, -35), r: rnd(1.8, attacking ? 4 : 3.2), life: rnd(0.12, 0.26), max: 0.3 });
+    }
+  } else if (G.skill === 'bolt') {
+    if (Math.random() < (attacking ? 30 : 9) * dt) {
+      const j = Math.floor(Math.random() * n), [x, y] = bladeWorld(pts[j * 2], pts[j * 2 + 1], ox), a = rnd(0, 6.28);
+      fx.push({ type: 'spark', x, y, vx: Math.cos(a) * 180, vy: Math.sin(a) * 180, life: 0.12, max: 0.3, blue: true });
+    }
+  }
+}
+function jagged(x0, y0, x1, y1, segs, amp) {
+  const nx = -(y1 - y0), ny = x1 - x0, l = Math.hypot(nx, ny) || 1;
+  ctx.moveTo(x0, y0);
+  for (let i = 1; i < segs; i++) {
+    const t = i / segs, o = (Math.random() - 0.5) * amp * 2;
+    ctx.lineTo(x0 + (x1 - x0) * t + nx / l * o, y0 + (y1 - y0) * t + ny / l * o);
+  }
+  ctx.lineTo(x1, y1);
+}
+// tia điện chạy quanh lưỡi kiếm (vẽ mới mỗi khung hình nên tự chập chờn)
+function drawBladeArcs() {
+  if (G.skill !== 'bolt' || !VAR.bolt || P.dead) return;
+  const pts = bladePts(); if (!pts) return;
+  const n = pts.length / 2, ox = P.state === 'wall' ? 13 : 0;
+  const attacking = P.state === 'attack' || P.state === 'aatk';
+  const arcs = [];
+  for (let k = 0; k < (attacking ? 6 : 3); k++) {
+    if (Math.random() < 0.3) continue;
+    const i = Math.floor(Math.random() * n), [ax, ay] = bladeWorld(pts[i * 2], pts[i * 2 + 1], ox);
+    let bx, by;
+    if (Math.random() < 0.55 && n > 1) {
+      const j = Math.floor(Math.random() * n); [bx, by] = bladeWorld(pts[j * 2], pts[j * 2 + 1], ox);
+      const d = Math.hypot(bx - ax, by - ay);
+      if (d > 26 || d < 4) { const a = rnd(0, 6.28); bx = ax + Math.cos(a) * 12; by = ay + Math.sin(a) * 12; }
+    } else { const a = rnd(0, 6.28), len = rnd(6, attacking ? 20 : 13); bx = ax + Math.cos(a) * len; by = ay + Math.sin(a) * len; }
+    arcs.push([ax, ay, bx, by]);
+  }
+  if (!arcs.length) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  for (const [ax, ay, bx, by] of arcs) {
+    ctx.beginPath(); jagged(ax, ay, bx, by, 4, 3.5);
+    ctx.globalAlpha = 0.45; ctx.strokeStyle = '#3f8dff'; ctx.lineWidth = 2.6; ctx.stroke();
+    ctx.globalAlpha = 0.95; ctx.strokeStyle = '#eafcff'; ctx.lineWidth = 0.9; ctx.stroke();
+  }
+  ctx.restore();
+}
+
 // Đòn chém. Số khung theo dải sprite; box = vùng vệt kiếm (px trong khung, gốc ở chân nhân vật).
 // lines = số dòng sát thương bật lên mỗi lần trúng (kiểu MapleStory M).
 const GROUND = [
@@ -928,6 +1113,7 @@ function explode(x, y, size) {
   for (let i = 0; i < 3 * size; i++) fx.push({ type: 'smoke', x: x + rnd(-10, 10) * size, y: y + rnd(-10, 10) * size, vx: rnd(-20, 20), vy: rnd(-50, -20), r: rnd(6, 12) * size, life: rnd(0.6, 1.0), max: 1.0 });
 }
 function updateFx(dt) {
+  if (hitstop <= 0) swordFx(dt);
   for (let i = fx.length - 1; i >= 0; i--) {
     const p = fx[i]; p.life -= dt;
     if (p.life <= 0) { fx.splice(i, 1); continue; }
@@ -1061,10 +1247,11 @@ function drawPlat(p) {
   ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(p.x, p.y + p.h - 3, p.w, 3);
   if (p.glow > 0) { ctx.fillStyle = `rgba(190,110,255,${p.glow * 0.6})`; ctx.fillRect(p.x - 2, p.y - 2, p.w + 4, p.h + 4); }
 }
-function drawSprite(name, fi, x, y, face, alpha, ox, white) {
+function drawSprite(name, fi, x, y, face, alpha, ox, white, glowK) {
   const img = IMG[name]; if (!img) return;
   fi = clamp(Math.floor(fi), 0, ANIMS[name].n - 1);
-  let src = img, sx = fi * 128;
+  const v = G.skill && VAR[G.skill] && VAR[G.skill][name];
+  let src = v ? v.tint : img, sx = fi * 128;
   if (white) {
     tctx.globalCompositeOperation = 'source-over'; tctx.clearRect(0, 0, 128, 128);
     tctx.drawImage(img, sx, 0, 128, 128, 0, 0, 128, 128);
@@ -1075,7 +1262,19 @@ function drawSprite(name, fi, x, y, face, alpha, ox, white) {
   ctx.translate(x, y); ctx.scale(face * S, S);
   if (alpha !== undefined) ctx.globalAlpha = alpha;
   ctx.drawImage(src, sx, 0, 128, 128, -64 + (ox || 0), -100, 128, 128);
+  // quầng sáng quanh lưỡi kiếm, chập chờn như lửa cháy / điện giật
+  if (v && !white && glowK) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = (alpha === undefined ? 1 : alpha) * glowK;
+    ctx.drawImage(v.glow, fi * 128, 0, 128, 128, -64 + (ox || 0), -100, 128, 128);
+  }
   ctx.restore();
+}
+function glowFlicker() {
+  const atk = P.state === 'attack' || P.state === 'aatk';
+  if (G.skill === 'fire') return (atk ? 0.95 : 0.75) + Math.random() * 0.25;
+  if (G.skill === 'bolt') return Math.random() < 0.12 ? 1.25 : (atk ? 0.8 : 0.55) + Math.random() * 0.3;
+  return 0.7;
 }
 function hpBar(t, w, y) {
   if (t.hp >= t.maxHp) return;
@@ -1422,7 +1621,8 @@ function render(time) {
   drawShots();
   for (const g of P.trail) drawSprite(g.name, g.f, g.x, g.y, g.face, (g.life / 0.2) * 0.35);
   const blink = P.inv > 0 && !P.dead && Math.floor(P.inv * 12) % 2 === 0;
-  drawSprite(P.anim.name, P.anim.f, P.x, P.y, P.face, blink ? 0.35 : 1, P.state === 'wall' ? 13 : 0, P.hurtFlash > 0);
+  drawSprite(P.anim.name, P.anim.f, P.x, P.y, P.face, blink ? 0.35 : 1, P.state === 'wall' ? 13 : 0, P.hurtFlash > 0, glowFlicker());
+  drawBladeArcs();
   drawOrbs(time);
   drawFx();
   drawNumbers();
@@ -1447,7 +1647,11 @@ function showPick() {
     const s = SKILLS[key];
     const b = document.createElement('button'); b.className = 'card';
     b.innerHTML = `<div class="ic">${s.icon}</div><b>${s.name}</b><span>${s.desc}</span>`;
-    b.onclick = () => { G.skill = key; pickEl.hidden = true; ptrs.clear(); G.mode = 'play'; startStage(0); };
+    b.onclick = () => {
+      G.skill = key;
+      try { buildVariant(key); } catch (e) { console.warn('Không tô được kiếm:', e); }
+      pickEl.hidden = true; ptrs.clear(); G.mode = 'play'; startStage(0);
+    };
     cards.append(b);
   }
   pickEl.hidden = false;
@@ -1512,11 +1716,14 @@ document.getElementById('fsBtn').onclick = () => {
 // ============ Khởi động ============
 addEventListener('resize', resize);
 function boot() {
+  // Mở file:// với ảnh rời thì trình duyệt không cho đọc điểm ảnh -> chơi bình thường, chỉ không có kiếm nguyên tố.
+  // Bản một-file (ảnh nhúng sẵn) và bản trên link claude.ai thì đọc được.
+  try { bladeData = analyzeBlades(); } catch (e) { bladeData = null; console.warn('Không phân tích được lưỡi kiếm:', e); }
   resize();
   resetGame();
   document.getElementById('loading').remove();
   showPick();
-  window.__dbg = { P, T, G, mons, orbs, combo, get boss() { return boss; }, startStage, resetGame, showPick, rearrange };
+  window.__dbg = { P, T, G, mons, orbs, combo, VAR, get boss() { return boss; }, startStage, resetGame, showPick, rearrange };
   requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
 }
 let pending = 0;
@@ -1525,7 +1732,8 @@ for (const name in ANIMS) {
   const img = new Image();
   img.onload = () => { IMG[name] = img; if (--pending === 0) boot(); };
   img.onerror = () => { document.getElementById('loading').textContent = 'Không tải được sprites/' + ANIMS[name].file; };
-  img.src = 'sprites/' + ANIMS[name].file;
+  // bản một-file nhúng sẵn ảnh vào window.SPRITE_DATA (xem build-standalone.py)
+  img.src = (window.SPRITE_DATA && window.SPRITE_DATA[ANIMS[name].file]) || 'sprites/' + ANIMS[name].file;
 }
 </script>
 </body>
