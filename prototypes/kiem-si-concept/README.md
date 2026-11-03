@@ -65,14 +65,14 @@ kỹ năng đã có, **kỷ lục** và nút **Chơi lại**.
 
 | Màn | Quái | Mới |
 |---|---|---|
-| 1 | 5 Bò Gai từ hai cổng | |
-| 2 | Bò Gai, Dơi Mắt, Bò Gai rơi từ trời | Dơi Mắt bay lượn rồi lao xuống |
-| 3 | Bom Chạy, Bò Gai, Dơi Mắt | Bom Chạy: lại gần là nổ; chém chết thì nổ lan sang quái khác |
-| 4 | Cóc Độc trên bục, Bò Gai, Dơi Mắt, Bom | Cóc Độc đứng trên bục phun axit vòng cung, giữ khoảng cách |
+| 1 | 5 Heo Rừng từ hai cổng | |
+| 2 | Heo Rừng, Ong Vò Vẽ, Heo Rừng rơi từ trời | Ong Vò Vẽ bay lượn rồi lao xuống chích |
+| 3 | Heo Bom, Heo Rừng, Ong Vò Vẽ | Heo Bom (heo đen cõng bom): lại gần là nổ; chém chết thì nổ lan sang quái khác |
+| 4 | Ốc Độc trên bục, Heo Rừng, Ong Vò Vẽ, Heo Bom | Ốc Độc (vỏ xanh) đứng trên bục phun axit vòng cung, giữ khoảng cách |
 | 5 | **Boss Ma Nhãn** | |
-| 6 | Giáp Thạch, Bò Gai, Dơi Mắt, Bom | Giáp Thạch: khiên chặn đòn phía trước (chỉ ăn 25%), đánh sau lưng hoặc từ trên đầu |
-| 7 | Mắt Quỷ, Bom, Bò Gai rơi từ trời, Cóc Độc | Mắt Quỷ lơ lửng trên cao, gồng rồi bắn cầu năng lượng |
-| 8 | Hai Giáp Thạch, Cóc Độc, Mắt Quỷ, đủ loại từ mọi phía | |
+| 6 | Ốc Giáp, Heo Rừng, Ong Vò Vẽ, Heo Bom | Ốc Giáp (ốc to): thụt vào vỏ rồi lăn tới, dội tường; trong vỏ chỉ ăn 25%. Nhảy qua, chém lúc nó thò đầu ra choáng (sao vàng) |
+| 7 | Ong Chúa Độc, Heo Bom, Heo Rừng rơi từ trời, Ốc Độc | Ong Chúa Độc (ong tím, to) lơ lửng trên cao, gồng rồi bắn kim độc |
+| 8 | Hai Ốc Giáp, Ốc Độc, Ong Chúa Độc, đủ loại từ mọi phía | |
 | 9 | Có quái tinh anh (viền vàng: máu x2,4, đau x1,3, to hơn) | |
 | 10 | **Boss Hỏa Long** | |
 
@@ -83,14 +83,16 @@ Quái ra theo **nhóm** từ 4 kiểu chỗ: cổng chân tường hai bên, mé
 
 - **Ma Nhãn (màn 5):** bảng WARNING đỏ, rơi từ trên cao đáp đất nổ tung. Bay lượn, gồng mắt bắn chùm cầu
   (chém vỡ được), biến mất thì xếp lại bục. Máu càng thấp càng hay dịch chuyển và bắn dày hơn.
-- **Hỏa Long (màn 10):** bảng WARNING, sàn rung rồi rồng phóng vọt lên từ dưới sàn kèm nổ dây chuyền.
-  Rồng dài 16 đốt, chém đốt nào cũng trúng. Ba kiểu đánh:
-  - Lượn sà xuống sát sàn quét ngang đấu trường (nhảy đôi hoặc đứng bục để né)
-  - Bay lên góc cao, gồng rồi phun lửa quét theo người chơi
-  - Phun 3 quả cầu lửa bay vòng cung, rơi xuống thì nổ
-
-  **Sàn hóa dung nham** theo chu kỳ: báo nóng 1,6 giây ("SÀN SẮP HÓA DUNG NHAM — LÊN BỤC!") rồi trào. Chạm
-  dung nham thì bỏng và bị bật lên. Máu rồng càng thấp thì dung nham trào càng dày (nghỉ 10 giây xuống 4,5 giây).
+- **Hỏa Long (màn 10):** quái thú phun lửa (hình dựng sẵn, có quầng lửa cam phía sau cho nổi trên nền đêm).
+  Bảng WARNING, đất nổ tung, con thú chui lên khỏi mặt đất, rồi gầm (tên boss hiện ra, thanh máu đầy dần). Đòn đánh:
+  - Cào móng (2 kiểu, tầm với khác nhau) khi đứng gần
+  - Phun lửa: vùng lửa trúng đòn đo theo từng khung hình của sprite, cháy dài gần 1/3 đấu trường
+  - Nhảy bổ xuống chỗ người chơi, đáp đất tạo sóng chấn (đứng trên bục thì không sao)
+  - **Gầm lên thì sàn hóa dung nham:** báo nóng ("SÀN SẮP HÓA DUNG NHAM — LÊN BỤC!") rồi trào. Chạm dung nham thì bỏng
+    và bị bật lên; con thú đứng trong dung nham không sao. Máu càng thấp càng hay gầm (nghỉ 10 giây xuống 4,5 giây)
+    và đổi từ đi bộ sang chạy.
+  - Bị đánh dồn đủ đau (6% máu) thì khựng lại một nhịp (hoạt ảnh trúng đòn), là lúc tung combo.
+  - Chết: hoạt ảnh gục ngã + nổ dây chuyền rồi CHIẾN THẮNG.
 
 ## Kỹ năng (6 kỹ năng, mỗi cái có thụ động + chiêu trong ô)
 
@@ -127,7 +129,10 @@ Thanh kiếm mang màu của kỹ năng nguyên tố lấy gần nhất.
   Các nhát bỏ bớt khung lấy đà đầu để bấm là ra đòn ngay (~0,13 giây).
 - Animation còn thiếu được bù bằng code như brief: trượt tường giữ khung 0 của WallJump, chém trên không dùng lại
   AttackSwing1, nhảy đôi dùng khung lộn người 14–19 của WallJump, Lốc Kiếm lặp khung vệt chém của AttackSwing3.
-- Quái và boss vẽ bằng hình khối trên canvas (chưa có sprite).
+- Quái dùng sprite pixel (vẽ không làm mịn cho nét pixel sắc). Chớp trắng / gồng đỏ / bỏng cam bằng cách phủ màu lên khung
+  qua một canvas tạm. Ma Nhãn vẫn vẽ bằng hình khối vì gói hình không có con nào hợp.
+- Boss quái thú: khung 340x255 (bản x256p), riêng phun lửa là khung gấp đôi 680x510 để chứa lửa. Điểm chân (144, 240),
+  khung lửa (314, 479). Tầm móng và vùng lửa từng khung đo bằng script từ ảnh rồi ghi cứng trong `CLAW` / `FIRE_BOX`.
 - **Tách lưỡi kiếm:** lưỡi kiếm và da tay/mặt cùng màu trắng, nên lúc tải game em lọc điểm ảnh trắng,
   co 3x3: lưỡi kiếm mảnh bị bào mất, da dày còn lại. Mảng còn lại nhỏ (< 150 điểm) là da, nở lại 2 điểm
   rồi loại ra; mảng rất lớn là vệt chém nên vẫn tính là kiếm. Sau đó tô màu theo bảng `PAL`, làm quầng sáng
@@ -137,12 +142,18 @@ Thanh kiếm mang màu của kỹ năng nguyên tố lấy gần nhất.
 
 ## Hình
 
-Nhân vật: bộ "2D Sword Character PC" của EBros Entertainment (`sprites/`). Anh Thái Anh đã
-đồng ý đưa lên repo. **Cần kiểm tra lại giấy phép trước khi phát hành.**
+- Nhân vật: bộ "2D Sword Character PC" của EBros Entertainment (`sprites/*.png`). Anh Thái Anh đã
+  đồng ý đưa lên repo. **Cần kiểm tra lại giấy phép trước khi phát hành.**
+- Quái: heo rừng, ong, ốc sên trong gói "Legacy Fantasy - High Forest" của Anokolisa (`sprites/forest/`). Ong tím và
+  ốc vỏ xanh là em đổi màu từ bản gốc. Giấy phép (`sprites/forest/Terms-Anokolisa.txt`): dùng được cho game kể cả game bán,
+  không bắt buộc ghi tên, được sửa màu; chỉ không được bán lại chính bộ hình.
+- Boss Hỏa Long: quái thú phun lửa trong gói `x256p_Spritesheets` (`sprites/beast/`, đã đổi sang WebP). Gói này
+  **không kèm file giấy phép**, cần kiểm tra nguồn và giấy phép trước khi phát hành.
+- `prepare-assets.py <thư mục đã giải nén>` tạo lại toàn bộ `sprites/forest` và `sprites/beast` từ các gói gốc.
 
 Ảnh chụp: `screenshot.png` (số sát thương), `screenshot-warning.png` (bảng WARNING), `screenshot-boss.png` (đánh Ma Nhãn),
 `screenshot-swords.png` (kiếm lửa / kiếm sét), `screenshot-moba.png` (điều khiển MOBA + quái màn 9),
-`screenshot-dragon.png` (Hỏa Long + dung nham).
+`screenshot-beast.png` (Hỏa Long phun lửa + dung nham), `screenshot-mobs.png` (quái pixel màn 9).
 
 ## Kết luận
 

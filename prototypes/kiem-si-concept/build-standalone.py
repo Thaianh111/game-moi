@@ -22,9 +22,12 @@ def main() -> None:
     html = (HERE / "prototype.html").read_text(encoding="utf-8")
     if MARK not in html:
         sys.exit("Không tìm thấy chỗ chèn ảnh trong prototype.html")
+    # khóa = đường dẫn tương đối trong sprites/ (vd "idle.png", "forest/bee-fly.png", "beast/fire.webp")
+    mime = {".png": "image/png", ".webp": "image/webp"}
+    sprites = HERE / "sprites"
     data = {
-        p.name: "data:image/png;base64," + base64.b64encode(p.read_bytes()).decode("ascii")
-        for p in sorted((HERE / "sprites").glob("*.png"))
+        p.relative_to(sprites).as_posix(): f"data:{mime[p.suffix]};base64," + base64.b64encode(p.read_bytes()).decode("ascii")
+        for p in sorted(sprites.rglob("*")) if p.suffix in mime
     }
     inject = "<script>window.SPRITE_DATA = " + json.dumps(data) + ";</script>\n"
     out.write_text(html.replace(MARK, inject + MARK, 1), encoding="utf-8")
