@@ -29,25 +29,39 @@ SPR = HERE / "sprites"
 CHAR_ANIMS = ["Idle", "Run", "Jump", "Attack_1", "Attack_2", "Attack_3", "Shield", "Hurt", "Dead"]
 # Icon Aeromancer (số file) + màu tô: (tối, giữa, sáng)
 ICONS = {
+    # 24 kỹ năng, mỗi cái một icon gốc khác nhau (số = file PNG/<n>.png của gói Aeromancer), tô theo màu kỹ năng
     "fire": (26, "#3a0800", "#ff6a1a", "#fff1c0"),
     "bolt": (46, "#1a0a40", "#9a6bff", "#fff6b0"),
-    "wave": (8, "#02201c", "#2fcfae", "#eafff8"),
     "ice": (47, "#02142a", "#4fc8ff", "#f2fdff"),
-    "shield": (40, "#2a1800", "#e0a62a", "#fff6d0"),
+    "wave": (8, "#02201c", "#2fcfae", "#eafff8"),
+    "poison": (37, "#0c1a02", "#7ad62a", "#f0ffd0"),
+    "light": (13, "#2a1a00", "#ffc93a", "#fffbe8"),
+    "blood": (29, "#2a0004", "#e0202e", "#ffd8d8"),
+    "shadow": (17, "#0c0420", "#7a3cff", "#efe6ff"),
+    "shield": (31, "#2a1800", "#e0a62a", "#fff6d0"),
+    "heal": (49, "#021e1a", "#3ad6b8", "#e8fff8"),
+    "time": (30, "#241600", "#e0a840", "#fff4d0"),
     "whirl": (10, "#0a1830", "#7fb8ff", "#ffffff"),
-    "meteor": (27, "#300800", "#ff4a1a", "#ffe0a0"),
+    "boomer": (36, "#021a24", "#5ac8e8", "#eafcff"),
+    "hole": (50, "#0a0018", "#9a4aff", "#f0e0ff"),
     "twin": (28, "#300a20", "#ff6ab8", "#ffe8f6"),
-    "quake": (32, "#1c0e04", "#c0803a", "#ffe8c8"),
-    "thunder": (15, "#201800", "#ffd23a", "#fffbe0"),
-    "spike": (21, "#0a1c04", "#7ad13a", "#f0ffd8"),
-    # hợp kích (2 màu: nửa trên màu A, nửa dưới màu B)
-    "fu-firebolt": (42, "#200410", "#ff5a1a", "#c8a0ff"),
+    "knife": (23, "#14161c", "#a8b0c8", "#ffffff"),
+    "orb": (21, "#0a1030", "#6a8aff", "#eef2ff"),
+    "hawk": (41, "#241a08", "#d8b060", "#fff8e8"),
+    "clone": (7, "#100828", "#6a5aff", "#e8e4ff"),
+    "meteor": (27, "#300800", "#ff4a1a", "#ffe0a0"),
+    "mine": (33, "#241a00", "#e0b030", "#fff4c8"),
+    "quake": (43, "#1c0e04", "#c0803a", "#ffe8c8"),
+    "spike": (3, "#0a1c04", "#7ad13a", "#f0ffd8"),
+    "launch": (42, "#02182a", "#5ad0ff", "#f0fcff"),
+    # hợp kích; fu-pair để xám, game nhuộm 2 màu nguyên tố lúc vẽ
+    "fu-pair": (45, "#1a1a1a", "#9a9a9a", "#ffffff"),
     "fu-tornado": (19, "#08142a", "#7fb8ff", "#ffffff"),
-    "fu-crescent": (49, "#200a00", "#ffb35c", "#ffffff"),
-    "fu-rain": (14, "#140a30", "#9a6bff", "#fff6b0"),
-    "fu-meteor": (28, "#300800", "#ff4a1a", "#ffe0a0"),
-    "fu-quake": (43, "#1c0e04", "#c0803a", "#ffe8c8"),
-    "fu-nova": (31, "#2a1800", "#ffd36a", "#ffffff"),
+    "fu-crescent": (15, "#200a00", "#ffb35c", "#ffffff"),
+    "fu-rain": (9, "#141000", "#ffd04a", "#fffbe0"),
+    "fu-meteor": (35, "#300800", "#ff4a1a", "#ffe0a0"),
+    "fu-quake": (44, "#1c0e04", "#c0803a", "#ffe8c8"),
+    "fu-nova": (40, "#2a1800", "#ffd36a", "#ffffff"),
 }
 
 

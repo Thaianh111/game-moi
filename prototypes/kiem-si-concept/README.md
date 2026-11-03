@@ -11,7 +11,8 @@ PROCEED thì viết lại từ đầu.
 
 Bản thử đã đi qua bước 1 đến 4 trong mục "Thứ tự làm" của `game-brief.md` (di chuyển và combo,
 quái và đợt, boss đổi địa hình, chọn skill). Ngoài brief còn có: 4 nhân vật chọn được, lướt chém,
-chiêu hợp kích giữa 2 kỹ năng, nâng cấp ★, 4 boss và 20 màn.
+24 kỹ năng khác hẳn nhau, chiêu hợp kích giữa 2 kỹ năng, nâng cấp ★, 4 boss và 20 màn. **Mỗi lần chơi lại
+một khác:** kỹ năng lần trước chưa gặp được ưu tiên, thứ tự boss bị xáo, bục và đội hình quái mỗi màn đổi.
 
 ## Giả thuyết
 
@@ -19,6 +20,7 @@ chiêu hợp kích giữa 2 kỹ năng, nâng cấp ★, 4 boss và 20 màn.
 > để đánh qua 20 màn (16 màn quái, 4 boss), họ sẽ thấy "đã tay" và muốn chơi lại. Đo bằng: người chơi
 > tự đánh tới **màn 5 (Ma Nhãn) trong lần chơi đầu**, không phải hỏi cách bấm, có **dùng chiêu trong ô và
 > chiêu Hợp Kích** mà không cần nhắc, và **bấm "Chơi lại"** (thử nhân vật khác) sau khi thắng hoặc thua.
+> Lần chơi thứ hai phải thấy khác lần đầu (kỹ năng mới, boss khác thứ tự) chứ không lặp lại.
 
 **Giả định rủi ro nhất:** trên màn hình điện thoại, ngón cái phải vừa giữ cần điều khiển, vừa bấm
 Chém/Nhảy/Lướt, 3 ô kỹ năng và ô Hợp Kích mà không bấm nhầm hay che mất nhân vật.
@@ -26,7 +28,7 @@ Chém/Nhảy/Lướt, 3 ô kỹ năng và ô Hợp Kích mà không bấm nhầm
 ## Cách chạy
 
 - **Bản một file (khuyên dùng):** chạy `python3 build-standalone.py` để gói `prototype.html` + `sprites/`
-  thành `kiem-si-bat-tan.html` (~4 MB, ảnh nhúng sẵn). Mở bằng cách bấm đúp, gửi qua điện thoại được.
+  thành `kiem-si-bat-tan.html` (~4,5 MB, ảnh nhúng sẵn). Mở bằng cách bấm đúp, gửi qua điện thoại được.
   File này có sẵn trong repo để tải về chơi luôn. Sửa `prototype.html` hay `sprites/` thì nhớ build lại rồi commit cùng.
 - Mở thẳng `prototype.html` bằng `file://` vẫn chơi được, nhưng trình duyệt không cho đọc điểm ảnh của
   ảnh rời nên **Kiếm Sĩ không có lưỡi kiếm nguyên tố**. Bản một file và link claude.ai thì có.
@@ -73,97 +75,140 @@ choáng 0,5 giây. Ai cũng có.
 
 ## Vòng chơi: 20 màn
 
-1. **Chọn nhân vật**, rồi **chọn 1 kỹ năng khởi đầu** (3 trong 4: Hỏa / Lôi / Kiếm Khí / Băng) → vào ô 1.
-2. **Màn 1–4: diệt quái.** **Màn 5: boss Ma Nhãn** → hồi đầy máu, **chọn thêm 1 kỹ năng** → ô 2.
-3. **Màn 6–9: diệt quái.** **Màn 10: boss Hỏa Long** → hồi đầy máu, chọn thêm 1 kỹ năng → ô 3.
-4. **Màn 11–14: diệt quái.** **Màn 15: boss Long Vương** → hồi đầy máu, **nâng cấp ★ 1 kỹ năng đang có**
+1. **Chọn nhân vật**, rồi **chọn 1 kiếm nguyên tố khởi đầu** (3 thẻ trong 8 kiếm nguyên tố) → vào ô 1.
+2. **Màn 1–4: diệt quái.** **Màn 5: boss** → hồi đầy máu, **chọn thêm 1 kỹ năng** (3 thẻ trong 24) → ô 2.
+3. **Màn 6–9: diệt quái.** **Màn 10: boss** → hồi đầy máu, chọn thêm 1 kỹ năng → ô 3.
+4. **Màn 11–14: diệt quái.** **Màn 15: boss** → hồi đầy máu, **nâng cấp ★ 1 kỹ năng đang có**
    (hồi chiêu nhanh hơn 30%, chiêu mạnh hơn 50%).
-5. **Màn 16–19: diệt quái.** **Màn 20: trùm cuối Hắc Long Vương.** Hạ xong là thắng.
+5. **Màn 16–19: diệt quái.** **Màn 20: trùm cuối.** Hạ xong là thắng.
 
 Lúc chọn kỹ năng, thẻ nào mở được Hợp Kích mới sẽ ghi "Mở hợp kích: …". Qua mỗi màn quái được hồi 25 máu.
 Hết máu thì thua. Thắng hay thua đều hiện nhân vật, điểm, số quái, thời gian, kỹ năng (có ★),
-**kỷ lục** và nút **Chơi lại** (về màn chọn nhân vật).
+thứ tự boss đã gặp, **kỷ lục** và nút **Chơi lại** (về màn chọn nhân vật).
 
-| Màn | Quái | Mới |
-|---|---|---|
-| 1 | Heo Rừng từ hai cổng | |
-| 2 | Heo Rừng, Ong Vò Vẽ, Heo Rừng rơi từ trời | Ong Vò Vẽ bay lượn rồi lao xuống chích |
-| 3 | Heo Bom, Heo Rừng, Ong Vò Vẽ | Heo Bom: lại gần là nổ; chém chết thì nổ lan sang quái khác |
-| 4 | Ốc Độc trên bục, Heo Rừng, Ong Vò Vẽ, Heo Bom | Ốc Độc đứng trên bục phun axit vòng cung |
-| 5 | **Boss Ma Nhãn** | |
-| 6 | Ốc Giáp, Heo Rừng, Ong Vò Vẽ, Heo Bom | Ốc Giáp: thụt vào vỏ lăn tới, trong vỏ chỉ ăn 25%; chém lúc nó thò đầu ra choáng |
-| 7 | Ong Chúa Độc, Heo Bom, Heo Rừng rơi từ trời, Ốc Độc | Ong Chúa Độc lơ lửng trên cao bắn kim độc |
-| 8 | Hai Ốc Giáp, Ốc Độc, Ong Chúa Độc, đủ loại từ mọi phía | |
-| 9 | Có quái tinh anh (viền vàng: máu x2,4, đau x1,3, to hơn) | |
-| 10 | **Boss Hỏa Long** | |
-| 11 | Nhẫn Giả Bóng + quái cũ | **Nhẫn Giả Bóng** (ninja tím): ở xa ném phi tiêu, lại gần chém nhanh, mình đứng trên bục thì nó nhảy lên đuổi |
-| 12 | Lãng Khách + quái cũ | **Lãng Khách** (kiếm khách áo đỏ thẫm): thấy mình vung kiếm trước mặt là giơ kiếm đỡ (chỉ ăn 25%) rồi phản đòn; đánh sau lưng hoặc chờ nó chém hụt |
-| 13 | Nhẫn giả và lãng khách cùng kéo đến | |
-| 14 | Tinh anh khắp nơi | |
-| 15 | **Boss Long Vương** | |
-| 16 | Hỏa Long Binh + quái cũ | **Hỏa Long Binh** (rồng con): đi tới phun lửa tầm gần, rất trâu, ít bị đẩy lùi |
-| 17 | Quái kéo đến dồn dập, 2 Hỏa Long Binh một lúc | |
-| 18 | Đội tinh anh | |
-| 19 | Gần như toàn tinh anh | |
-| 20 | **Trùm cuối Hắc Long Vương** | |
+### Mỗi lần chơi một khác
+
+- **Kỹ năng xoay vòng:** game nhớ các thẻ kỹ năng đã hiện ở lần chơi trước (lưu trong trình duyệt). Lần sau thẻ chưa
+  gặp được ưu tiên, có nhãn vàng **MỚI**. Trong cùng một lần chơi, thẻ đã hiện mà không chọn cũng không hiện lại
+  (trừ khi hết thẻ). Mỗi lần chơi hiện tối đa 9 thẻ trên 24, nên 2 lần liền không trùng thẻ nào.
+- **Thứ tự 4 boss xáo ngẫu nhiên**, và không con nào đứng lại đúng màn của lần trước. Boss ra càng muộn càng trâu
+  và đánh đau hơn, nên con nào làm trùm cuối cũng khó:
+
+  | Ô boss | Máu | Sát thương | Rồng con Long Vương gọi ra |
+  |---|---|---|---|
+  | Màn 5 | 90.000 | x0,8 | thường |
+  | Màn 10 | 150.000 | x1 | thường, trâu hơn |
+  | Màn 15 | 205.000 | x1,12 | tinh anh (nếu là Hắc Long Vương) |
+  | Màn 20 | 260.000 | x1,25 | tinh anh (nếu là Hắc Long Vương) |
+
+  Ma Nhãn ở màn 15/20 bắn thêm 2 viên mỗi chùm. Hỏa Long và Hắc Long Vương luôn có bố cục bục cao để né dung nham.
+- **Bố cục bục:** 7 bố cục (thêm bậc thang, hai tháp, rải rác), mỗi màn bốc một cái, hai màn liền nhau không trùng.
+- **Đội hình quái:** đợt đầu của màn có quái mới giữ nguyên để giới thiệu. Các đợt sau: mỗi con có 50% bị đổi sang
+  loại quái khác **đã mở khóa tới màn đó** (quái bay chỉ ra từ trên cao, quái đất ra từ cổng / trời / bục), cổng trái
+  phải đảo ngẫu nhiên, thứ tự các đợt xáo lại. Tinh anh vẫn giữ là tinh anh.
+
+| Màn | Quái mới (đợt đầu) |
+|---|---|
+| 1 | Heo Rừng |
+| 2 | Ong Vò Vẽ bay lượn rồi lao xuống chích |
+| 3 | Heo Bom: lại gần là nổ; chém chết thì nổ lan sang quái khác |
+| 4 | Ốc Độc đứng trên bục phun axit vòng cung |
+| 5 | **Boss** |
+| 6 | Ốc Giáp: thụt vào vỏ lăn tới, trong vỏ chỉ ăn 25%; chém lúc nó thò đầu ra choáng |
+| 7 | Ong Chúa Độc lơ lửng trên cao bắn kim độc |
+| 8–9 | Đủ loại từ mọi phía; màn 9 có quái tinh anh (viền vàng: máu x2,4, đau x1,3, to hơn) |
+| 10 | **Boss** |
+| 11 | **Nhẫn Giả Bóng** (ninja tím): ở xa ném phi tiêu, lại gần chém nhanh, mình đứng trên bục thì nó nhảy lên đuổi |
+| 12 | **Lãng Khách** (kiếm khách áo đỏ thẫm): thấy mình vung kiếm trước mặt là giơ kiếm đỡ (chỉ ăn 25%) rồi phản đòn |
+| 13–14 | Nhẫn giả và lãng khách cùng kéo đến, tinh anh khắp nơi |
+| 15 | **Boss** |
+| 16 | **Hỏa Long Binh** (rồng con): đi tới phun lửa tầm gần, rất trâu, ít bị đẩy lùi |
+| 17–19 | Dồn dập, rồi gần như toàn tinh anh |
+| 20 | **Trùm cuối** |
 
 Từ màn 11 trở đi máu và tốc độ quái tăng dần (x1,65 → x2,4 máu). Quái ra theo **nhóm** từ 4 kiểu chỗ: cổng chân
 tường hai bên, mép trên (quái bay), **rơi từ trời** và **hiện trên bục**. Hai kiểu sau có dấu báo đỏ nhấp nháy trước 0,9 giây.
+Màn ngay trước boss ghi tên boss sắp gặp trên bảng giới thiệu màn.
 
 ### Boss
 
-Boss nào cũng có bảng WARNING đỏ trước khi ra, thanh máu đầy dần, nổ dây chuyền khi chết.
+Boss nào cũng có bảng WARNING đỏ trước khi ra (trùm cuối ghi thêm "TRÙM CUỐI"), thanh máu đầy dần, nổ dây chuyền khi chết.
 
-- **Ma Nhãn (màn 5):** rơi từ trên cao đáp đất nổ tung. Bay lượn, gồng mắt bắn chùm cầu (chém vỡ được), biến mất
+- **Ma Nhãn:** rơi từ trên cao đáp đất nổ tung. Bay lượn, gồng mắt bắn chùm cầu (chém vỡ được), biến mất
   thì xếp lại bục. Máu càng thấp càng hay dịch chuyển và bắn dày hơn.
-- **Hỏa Long (màn 10):** quái thú chui lên khỏi mặt đất rồi gầm. Cào móng, phun lửa (vùng lửa đo theo từng khung
+- **Hỏa Long:** quái thú chui lên khỏi mặt đất rồi gầm. Cào móng, phun lửa (vùng lửa đo theo từng khung
   hình), nhảy bổ xuống tạo sóng chấn. **Gầm lên thì sàn hóa dung nham** ("LÊN BỤC!"); máu càng thấp càng hay gầm.
   Bị đánh dồn đủ đau thì khựng lại một nhịp.
-- **Long Vương (màn 15):** hồn rồng sà từ trời xuống, đáp đất rồi gầm. Đòn đánh:
+- **Long Vương:** hồn rồng sà từ trời xuống, đáp đất rồi gầm. Đòn đánh:
   - Cào móng khi mình đứng gần
   - **Gọi hồn rồng:** dấu đỏ hiện dưới sàn, 1 giây sau cột lửa phun lên đúng chỗ đó
   - Ném 3 quả cầu lửa vòng cung rải quanh chỗ mình đứng (chém vỡ được)
   - Còn 2/3 và 1/3 máu thì gọi 2 Hỏa Long Binh từ hai cổng
-- **Hắc Long Vương (màn 20):** Long Vương bản tím đen, máu nhiều hơn, đánh nhanh hơn. Ném 5 cầu lửa, mỗi lần
-  gọi cột lửa thì **xếp lại bục**, dưới 60% máu thì **gầm hóa sàn thành dung nham**, gọi rồng con tinh anh 3 lần
+- **Hắc Long Vương:** Long Vương bản tím đen, đánh nhanh hơn. Ném 5 cầu lửa, mỗi lần
+  gọi cột lửa thì **xếp lại bục**, dưới 60% máu thì **gầm hóa sàn thành dung nham**, gọi rồng con 3 lần
   (75%, 50%, 25% máu).
 
-## Kỹ năng (11 kỹ năng, mỗi cái có thụ động + chiêu trong ô)
+## Kỹ năng: 24 kỹ năng, mỗi cái một cơ chế riêng
 
-| Kỹ năng | Thụ động (luôn chạy) | Chiêu bấm (hồi) |
+Mỗi kỹ năng có thụ động (luôn chạy) + chiêu bấm trong ô (có hồi chiêu), một icon riêng không trùng. Tung chiêu thì có
+vòng sáng màu kỹ năng và tên chiêu bay lên trên đầu. Thẻ chọn ghi loại kỹ năng (Nguyên tố, Triệu hồi, Khống chế…).
+
+**8 kiếm nguyên tố** (kỹ năng khởi đầu; đổi màu lưỡi kiếm của Kiếm Sĩ, toả hạt hiệu ứng quanh vũ khí của mọi nhân vật):
+
+| Kỹ năng | Thụ động | Chiêu (hồi) |
 |---|---|---|
-| 🔥 Hỏa Kiếm | Chém làm quái bỏng 2 giây | Hỏa Bạo: nổ vòng lửa quanh người, quái dính bỏng (8s) |
+| 🔥 Hỏa Kiếm | Chém làm quái bỏng 2 giây | Hỏa Long Xung: lao vút tới xuyên quái, để lại vệt lửa cháy 3 giây trên sàn (8s) |
 | ⚡ Lôi Kiếm | Chém trúng thì sét lan sang 3 con gần đó | Lôi Phạt: sét trời đánh 6 con gần nhất (9s) |
+| ❄️ Băng Kiếm | Chém làm quái chậm một nửa 2 giây | Băng Hoa: nổ băng, gai băng trồi khỏi sàn, đóng băng quái 2,5 giây (9s) |
 | 🌙 Kiếm Khí | Mỗi nhát chém bắn luồng kiếm bay xa | Vạn Kiếm: 5 luồng kiếm xoè hình quạt (7s) |
-| ❄️ Băng Kiếm | Chém làm quái chậm một nửa trong 2 giây | Băng Hoa: nổ băng quanh người, đóng băng quái 2,5 giây (9s) |
-| 🛡️ Khiên Thánh | Cứ 15 giây tự chặn 1 đòn | Thánh Quang: bất tử 3 giây, đẩy văng quái quanh người (14s) |
-| 🌀 Toàn Phong Trảm | Chém trên không xoay một vòng, trúng cả phía sau, mạnh hơn 30% | Lốc Kiếm: xoay kiếm 1,2 giây, chém liên tục xung quanh (8s) |
-| ☄️ Thiên Thạch | Cứ hạ 20 quái thì 1 thiên thạch tự rơi | Mưa Thiên Thạch: 4 thiên thạch rơi xuống quái (12s) |
-| ⚔️ Song Trảm | Mỗi nhát chém ra 2 lần (thêm 1 dòng sát thương) | Song Long Trảm: 2 nhát chém chéo khổng lồ phía trước (7s) |
-| 🪨 Địa Chấn | Từ trên cao đáp xuống tạo sóng chấn | Thiên Địa Chấn: bật lên rồi đập xuống, sóng chấn quét sàn (10s) |
-| 🌩️ Thiên Lôi | Cứ 10 giây sét tự đánh một con quái | Lôi Vực: 3 giây sét liên tục đánh quái quanh người (11s) |
-| 🌵 Gai Đất | Quái chết thì đất mọc gai đâm con bên cạnh | Địa Thứ: hàng gai đất trồi lên lan ra phía trước (8s) |
+| 🧪 Độc Kiếm | Mỗi nhát chồng 1 tầng độc (tối đa 5), độc dày rút máu nhanh | Độc Vụ: ném lọ độc vòng cung, vỡ thành mây độc 4 giây làm chậm và trúng độc (9s) |
+| ✨ Quang Kiếm | Chí mạng nổ chớp sáng lan sang quái quanh đó | Thánh Quang Trụ: cột sáng từ trời quét qua lại đấu trường 1,7 giây (10s) |
+| 🩸 Huyết Kiếm | Máu càng thấp đánh càng đau (tới +60%) | Huyết Cuồng: đổi 10 máu lấy 6 giây đánh nhanh và mạnh hơn 40%, chém trúng hút máu (14s) |
+| 🌑 Ám Kiếm | Chém sau lưng quái +60% và luôn chí mạng ("SAU LƯNG!") | Ảnh Sát: hiện sau lưng 5 con gần nhất, chém từng con (10s) |
 
-Kiếm Sĩ: thanh kiếm mang màu của kỹ năng nguyên tố lấy gần nhất (lửa cam, sét tím, kiếm khí xanh ngọc, băng xanh lam).
+**16 kỹ năng khác:**
+
+| Kỹ năng | Loại | Thụ động | Chiêu (hồi) |
+|---|---|---|---|
+| 🛡️ Khiên Thánh | Phòng thủ | Cứ 15 giây tự chặn 1 đòn | Thánh Quang: bất tử 3 giây, đẩy văng quái (14s) |
+| 💧 Linh Tuyền | Hồi máu | 4 giây không trúng đòn thì mỗi giây hồi 1 máu | Suối Hồi Sinh: hồi 30 máu trong 3 giây, đẩy quái ra (16s) |
+| ⌛ Thời Không | Khống chế | Quái trong vòng đồng hồ dưới chân chậm 25% | Ngưng Đọng: 4 giây quái, đạn, boss chậm còn 1/4, màn hình ngả vàng có mặt đồng hồ (18s) |
+| 🌀 Toàn Phong Trảm | Cận chiến | Chém trên không xoay một vòng, trúng cả sau lưng, +30% | Lốc Kiếm: xoay kiếm 1,2 giây (8s) |
+| 🪃 Hồi Phong Đao | Phóng chiêu | Nhát 3 combo ném lưỡi gió bay ra rồi quay về | Phong Hoàn Đao: lưỡi gió lớn bay ra rồi về, kéo quái theo, trúng 2 lần (8s) |
+| 🕳️ Hắc Động | Khống chế | Quái chết tạo xoáy nhỏ hút quái xung quanh lại | Hắc Động: lỗ đen hút quái 2,5 giây, đánh liên tục rồi nổ (12s) |
+| ⚔️ Song Trảm | Cận chiến | Mỗi nhát thêm 1 dòng sát thương | Song Long Trảm: 2 nhát chéo khổng lồ (7s) |
+| 🗡️ Phi Đao | Phóng chiêu | Mỗi lần lướt ném 3 phi đao | Đao Hoàn: 16 phi đao toả tròn (8s) |
+| 🔮 Hộ Thể Cầu | Triệu hồi | 2 cầu sét xoay quanh người, chạm quái là giật, chặn được đạn | Tinh Cầu Bạo: 6 cầu, vòng rộng ra 5 giây, rồi lao vào quái nổ (11s) |
+| 🦅 Thần Ưng | Triệu hồi | 1 chim thần bay theo, 4 giây bổ nhào mổ 1 con | Vạn Ưng: thêm 2 chim bổ nhào liên tục 5 giây (12s) |
+| 👥 Phân Thân | Triệu hồi | 1/5 nhát chém có bóng mờ chém lặp lại | Ảnh Phân Thân: 2 bóng hai bên chém theo mọi nhát 6 giây (14s) |
+| ☄️ Thiên Thạch | Diện rộng | Cứ hạ 20 quái thì 1 thiên thạch tự rơi | Mưa Thiên Thạch: 4 thiên thạch (12s) |
+| ☯️ Bát Quái Trận | Bẫy | Lướt để lại 1 trận pháp (tối đa 4), quái giẫm là nổ | Bát Quái Trận: rải 6 trận pháp phía trước, tồn tại 8 giây (10s) |
+| 🪨 Địa Chấn | Diện rộng | Từ trên cao đáp xuống tạo sóng chấn | Thiên Địa Chấn: bật lên rồi đập xuống (10s) |
+| 🌵 Gai Đất | Diện rộng | Quái chết thì đất mọc gai đâm con bên cạnh | Địa Thứ: hàng gai lan ra phía trước (8s) |
+| 🐉 Thăng Long | Khống chế | Nhát 3 combo hất quái lên trời, rơi đập đất mất thêm máu | Thăng Long Quyển: cột gió hất tung quái rồi quật xuống (9s) |
+
+So với bản trước: Hỏa Kiếm đổi chiêu từ "nổ vòng lửa" (giống Băng Hoa) sang lao xuyên quái; Thiên Lôi (trùng với
+Lôi Kiếm) bị thay bằng Hộ Thể Cầu; thêm 13 kỹ năng mới.
 
 ### Hợp Kích (chiêu phối hợp 2 kỹ năng)
 
 Có từ 2 kỹ năng trở lên là mở ô **Hợp Kích** (ô vàng). Ô nạp năng lượng bằng đòn đánh: mỗi đòn trúng +1,4%,
 mỗi con quái chết +3%. Đầy 100% thì ô sáng và có thể tung chiêu: tên chiêu hiện chữ vàng giữa màn hình.
 
-| Có 2 kỹ năng | Hợp Kích |
-|---|---|
-| 🔥 Hỏa + ⚡ Lôi | **Lôi Hỏa Long Quyển:** lốc xoáy lửa có sét giật bên trong, hút quái lại |
-| 🔥 Hỏa + ❄️ Băng | Băng Hỏa Long Quyển: lốc xoáy nửa lửa nửa băng |
-| ⚡ Lôi + ❄️ Băng | Băng Lôi Long Quyển: lốc xoáy băng giá có sét |
-| 🌀 Toàn Phong + bất kỳ | (Hỏa/Lôi/Băng/Cuồng) Phong Quyển: lốc xoáy khổng lồ mang nguyên tố đang có |
-| 🌙 Kiếm Khí hoặc ⚔️ Song Trảm + bất kỳ | Nguyệt Trảm: nhát chém trăng khuyết khổng lồ xuyên màn hình (có Song Trảm thì 2 nhát) |
-| 🌩️ Thiên Lôi + bất kỳ | Lôi Kiếm Vũ: 12 thanh kiếm sét cắm xuống quái |
-| ☄️ Thiên Thạch + bất kỳ | Thiên Thạch Vũ: 12 thiên thạch rơi khắp đấu trường |
-| 🪨 Địa Chấn hoặc 🌵 Gai Đất + bất kỳ | Địa Long Chấn: sóng chấn lớn khắp sàn, hất tung quái |
-| Còn lại | Song Kỹ Hợp Nhất: tung cùng lúc 2 chiêu + vòng sáng |
+- **2 kiếm nguyên tố** → lốc xoáy 2 màu mang cả 2 nguyên tố, tên ghép từ 2 nguyên tố: **Lửa + Sét = Lôi Hỏa Long
+  Quyển**, Độc + Lửa = Độc Hỏa Long Quyển, Ám + Băng = Băng Ám Long Quyển… (28 cặp). Icon ô hợp kích nhuộm 2 màu.
+- **Còn lại** theo họ của kỹ năng không phải nguyên tố, nhuộm màu kiếm nguyên tố đang có:
 
-Có nhiều cặp thì lấy cặp đứng trên trong bảng.
+| Họ | Kỹ năng | Hợp Kích |
+|---|---|---|
+| Lốc | Toàn Phong Trảm, Hồi Phong Đao, Hắc Động | (Hỏa/Lôi/…/Cuồng) Phong Quyển: lốc xoáy khổng lồ hút quái |
+| Trăng | Song Trảm, Phi Đao | Nguyệt Trảm: nhát trăng khuyết khổng lồ xuyên màn hình (có Song Trảm thì 2 nhát) |
+| Kiếm vũ | Hộ Thể Cầu, Thần Ưng, Phân Thân | Kiếm Vũ: 12 thanh kiếm thần màu nguyên tố cắm xuống quái |
+| Thiên thạch | Thiên Thạch, Bát Quái Trận | Thiên Thạch Vũ: 12 thiên thạch |
+| Chấn | Địa Chấn, Gai Đất, Thăng Long | Long Chấn: sóng chấn lớn khắp sàn + gai đất |
+| Ánh sáng | Khiên Thánh, Linh Tuyền, Thời Không | Quang Bạo: nổ ánh sáng lớn, hồi 20 máu, bất tử 2 giây |
+
+Có nhiều họ thì lấy họ đứng trên trong bảng.
 
 ## Trong bản thử
 
@@ -174,9 +219,9 @@ Có nhiều cặp thì lấy cặp đứng trên trong bảng.
 - Khựng hình, rung màn hình, chớp trắng và đẩy lùi khi bị trúng đòn, chết dùng animation chết của từng nhân vật.
 - **Số sát thương kiểu MapleStory M:** mỗi đòn bật một cột số thẳng hàng, dòng sau hiện chồng lên trên.
   Màu theo loại: cam (thường), hồng + CRIT (chí mạng), đỏ cam (bỏng), tím (sét), xanh ngọc (kiếm khí),
-  xanh lam (băng), nâu (đất), xám (chém vào khiên / Lãng Khách đỡ), tím đậm (mình mất máu), xanh lá (hồi máu),
-  vàng "CHẶN" (Khiên Thánh chặn đòn).
-- Quái bị chậm thì phủ màu xanh lam nhạt, bị đóng băng thì đứng yên và trắng xanh.
+  xanh lam (băng), nâu (đất), xanh nõn (độc), vàng (ánh sáng), đỏ (huyết), tím than (bóng tối), xám (chém vào khiên /
+  Lãng Khách đỡ), tím đậm (mình mất máu), xanh lá (hồi máu), vàng "CHẶN" (Khiên Thánh chặn đòn).
+- Quái bị chậm thì phủ màu xanh lam nhạt, đóng băng thì đứng yên và trắng xanh, trúng độc thì phủ xanh nõn và sủi bọt.
 
 **Đã cắt:** âm thanh, nhạc, Màn Né Tránh, skill ẩn, boss Thụ Yêu và Băng Hậu.
 
@@ -199,8 +244,13 @@ Có nhiều cặp thì lấy cặp đứng trên trong bảng.
   đo bằng script từ ảnh rồi ghi cứng trong `CLAW` / `FIRE_BOX`.
 - Long Vương: sprite pixel Dragon Lord phóng to x2,2. Hắc Long Vương là bản đổi màu tím đen. Hỏa Long Binh dùng lại sprite
   này ở cỡ nhỏ.
-- Lốc xoáy Hợp Kích: phễu tô gradient theo nguyên tố, 18 vòng xoáy, 5 tia sét tím trắng giật bên trong; trôi chậm về
-  phía trước, dội tường, hút quái về tâm và gây sát thương mỗi 0,18 giây.
+- Lốc xoáy Hợp Kích: phễu tô gradient theo nguyên tố, 18 vòng xoáy đổi màu 2 nguyên tố, có sét (Lôi) hoặc tia sáng
+  (Quang) bắn ra; trôi chậm về phía trước, dội tường, hút quái về tâm và gây sát thương mỗi 0,18 giây.
+- Chiêu đặt trên sân (vệt lửa, lọ độc, mây độc, cột sáng, lỗ đen, xoáy hút, trận pháp, cột gió) nằm chung trong mảng
+  `zones`, cập nhật và vẽ ở `updateZones` / `drawZones`. Chim thần ở `pets`, bóng mờ phân thân ở `ghosts`.
+- Ngưng Đọng: quái, đạn, cột lửa và boss chạy với bước thời gian x0,25; người chơi vẫn bình thường.
+- Xoay vòng và thứ tự boss lưu trong `localStorage` (`ksbt-seen`, `ksbt-boss`). Trình duyệt chặn lưu (chế độ ẩn danh…)
+  thì vẫn chơi được, chỉ là mỗi lần đều bốc ngẫu nhiên.
 
 ## Hình
 
@@ -208,8 +258,9 @@ Có nhiều cặp thì lấy cặp đứng trên trong bảng.
   đồng ý đưa lên repo. **Cần kiểm tra lại giấy phép trước khi phát hành.**
 - **Samurai, Ninja, Võ Sĩ, Nhẫn Giả Bóng, Lãng Khách:** gói free shinobi của craftpix (`sprites/chars/`, `sprites/enemy/`).
   Nhẫn Giả Bóng (tím) và Lãng Khách (đỏ thẫm) là em đổi màu từ Ninja và Samurai.
-- **Icon kỹ năng và hợp kích:** gói "Free 50 Aeromancer Skills" của craftpix, em tô lại màu theo từng kỹ năng
-  (`sprites/icons/`, WebP 96x96).
+- **Icon kỹ năng và hợp kích:** gói "Free 50 Aeromancer Skills" của craftpix (50 icon tĩnh, không có hiệu ứng động).
+  Game dùng 31 icon khác nhau (24 kỹ năng + 7 hợp kích), em tô lại màu theo từng kỹ năng (`sprites/icons/`, WebP 96x96).
+  Hiệu ứng chiêu đều vẽ bằng code.
   Hai gói craftpix chỉ kèm link điều khoản (`License-craftpix.txt`, `License-aeromancer.txt` → craftpix.net/file-licenses).
   **Cần đọc điều khoản trước khi phát hành, nhất là phần đưa hình lên repo công khai.**
 - **Long Vương / Hắc Long Vương / Hỏa Long Binh:** gói "Dragon Lord Basic" (`sprites/dlord/`). Gói **không kèm file
@@ -226,7 +277,9 @@ Có nhiều cặp thì lấy cặp đứng trên trong bảng.
 `screenshot-swords.png` (kiếm lửa / kiếm sét), `screenshot-moba.png` (điều khiển MOBA), `screenshot-beast.png`
 (Hỏa Long phun lửa + dung nham), `screenshot-mobs.png` (quái pixel màn 9), `screenshot-chars.png` (chọn nhân vật),
 `screenshot-dslash.png` (Samurai lướt chém, màn 11), `screenshot-fusion.png` (Lôi Hỏa Long Quyển),
-`screenshot-lord.png` (Hắc Long Vương ra trận, Ninja có 3 kỹ năng, 1 kỹ năng ★).
+`screenshot-lord.png` (Hắc Long Vương ra trận, Ninja có 3 kỹ năng, 1 kỹ năng ★),
+`screenshot-skills-1.png` / `-2` / `-3` (24 chiêu, mỗi ô một chiêu), `screenshot-pick.png` (lần chơi thứ 2: thẻ MỚI),
+`screenshot-fusion-pair.png` (Độc Hỏa Long Quyển), `screenshot-boss-shuffle.png` (Hắc Long Vương ra ở màn 5).
 
 ## Kết luận
 
