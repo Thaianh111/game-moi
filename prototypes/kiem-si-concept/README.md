@@ -27,7 +27,7 @@ Chém/Nhảy/Lướt, 3 ô kỹ năng và ô Hợp Kích mà không bấm nhầm
 
 - **Bản một file (khuyên dùng):** chạy `python3 build-standalone.py` để gói `prototype.html` + `sprites/`
   thành `kiem-si-bat-tan.html` (~4 MB, ảnh nhúng sẵn). Mở bằng cách bấm đúp, gửi qua điện thoại được.
-  File này không commit (đã có trong `.gitignore`), cứ build lại khi cần.
+  File này có sẵn trong repo để tải về chơi luôn. Sửa `prototype.html` hay `sprites/` thì nhớ build lại rồi commit cùng.
 - Mở thẳng `prototype.html` bằng `file://` vẫn chơi được, nhưng trình duyệt không cho đọc điểm ảnh của
   ảnh rời nên **Kiếm Sĩ không có lưỡi kiếm nguyên tố**. Bản một file và link claude.ai thì có.
 - Trên điện thoại: cầm ngang, bấm ⛶ để vào toàn màn hình (nếu trình duyệt cho phép).
