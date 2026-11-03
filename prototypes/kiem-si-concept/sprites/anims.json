@@ -1,0 +1,85 @@
+{
+  "frameSize": [
+    128,
+    128
+  ],
+  "pivot": [
+    64,
+    100
+  ],
+  "note": "Scaled 50% from 256x256 originals by EBros Entertainment. pivot = feet point in each frame.",
+  "anims": {
+    "AttackSwing1": {
+      "file": "attackswing1.png",
+      "frames": 21,
+      "fps": 30,
+      "loop": false
+    },
+    "AttackSwing2": {
+      "file": "attackswing2.png",
+      "frames": 15,
+      "fps": 30,
+      "loop": false
+    },
+    "AttackSwing3": {
+      "file": "attackswing3.png",
+      "frames": 24,
+      "fps": 30,
+      "loop": false
+    },
+    "Death": {
+      "file": "death.png",
+      "frames": 39,
+      "fps": 20,
+      "loop": false
+    },
+    "Idle": {
+      "file": "idle.png",
+      "frames": 16,
+      "fps": 12,
+      "loop": true
+    },
+    "Jump": {
+      "file": "jump.png",
+      "frames": 6,
+      "fps": 12,
+      "loop": false
+    },
+    "Kneel": {
+      "file": "kneel.png",
+      "frames": 26,
+      "fps": 20,
+      "loop": false
+    },
+    "Landing": {
+      "file": "landing.png",
+      "frames": 16,
+      "fps": 24,
+      "loop": false
+    },
+    "Run": {
+      "file": "run.png",
+      "frames": 18,
+      "fps": 24,
+      "loop": true
+    },
+    "Sheathing": {
+      "file": "sheathing.png",
+      "frames": 16,
+      "fps": 20,
+      "loop": false
+    },
+    "Slide": {
+      "file": "slide.png",
+      "frames": 16,
+      "fps": 24,
+      "loop": false
+    },
+    "WallJump": {
+      "file": "walljump.png",
+      "frames": 20,
+      "fps": 24,
+      "loop": false
+    }
+  }
+}
