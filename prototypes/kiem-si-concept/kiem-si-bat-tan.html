@@ -32,6 +32,9 @@
     background: rgba(255,255,255,.1); color: var(--text); font-size: 17px; cursor: pointer; touch-action: manipulation; }
   #tuneBtn { right: calc(10px + var(--sar)); }
   #fsBtn { right: calc(50px + var(--sar)); }
+  #sndBtn { right: calc(90px + var(--sar)); }
+  .card.off { opacity: .4; } .card.elite { border-color: #ff6a8a; } .btn.go { align-self: center; }
+  .lb-top .snd { background: rgba(255,255,255,.08); border: 0; border-radius: 10px; font-size: 15px; padding: 4px 8px; }
   #tune { position: fixed; top: 48px; right: calc(10px + var(--sar)); width: min(300px, 70vw); max-height: calc(100% - 60px); overflow-y: auto;
     background: var(--panel); border-radius: 12px; padding: 10px 12px; z-index: 9; font-size: 12px; box-sizing: border-box;
     backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
@@ -124,6 +127,7 @@
 <canvas id="cv"></canvas>
 <button class="tb" id="fsBtn" title="Toàn màn hình">⛶</button>
 <button class="tb" id="tuneBtn" title="Chỉnh thông số">⚙</button>
+<button class="tb" id="sndBtn" title="Âm thanh">🔊</button>
 <div id="tune" hidden></div>
 <div class="ov" id="pick" hidden>
   <h2 id="pickTitle"></h2>
@@ -138,7 +142,7 @@
 <div id="lobby" hidden>
   <div class="lb-top"><div class="lb-title">KIẾM SĨ BẤT TẬN</div>
     <div class="tabs"><button data-tab="char" class="on">Nhân vật</button><button data-tab="bag">Túi đồ</button><button data-tab="shop">Cửa hàng</button></div>
-    <div class="gold">🪙 <b id="lbGold">0</b></div><button class="btn play" id="lbPlay">VÀO TRẬN ▶</button></div>
+    <button class="snd" id="lbSnd">🔊</button><div class="gold">🪙 <b id="lbGold">0</b></div><button class="btn play" id="lbPlay">VÀO TRẬN ▶</button></div>
   <div class="lb-body" id="lbBody"></div>
 </div>
 <div id="title" hidden><canvas id="titleCv"></canvas><div class="tap">Chạm để bắt đầu</div></div>
@@ -777,7 +781,7 @@ const combo = { hits: 0, t: 0, pop: 0 };
 const G = { mode: 'select', char: 'kiemsi', stage: 0, phase: '', pt: 0, groups: [], total: 0, spawnT: 0, score: 0, kills: 0, killCount: 0, time: 0,
   skills: [], up: {}, elem: null, cd: {}, energy: 0, slowT: 0, slowMax: 4, fuBanner: 0, fuName: '', slotPop: [0, 0, 0, 0], slotDeny: [0, 0, 0, 0],
   marks: [], lava: { state: 'off', t: 0 }, flash: 0, flashC: '255,245,230', nameT: -1, bossBar: 0, bossName: '', bossSub: '',
-  endT: -1, won: false, pickNext: false, eq: null, look: {}, gold: 0, loot: [], offered: [], prevSeen: [], bossOrder: ['eye', 'beast', 'lord', 'lordx'], stageGroups: [], stageLayout: [] };
+  endT: -1, won: false, pickNext: false, boons: {}, eq: null, look: {}, gold: 0, loot: [], offered: [], prevSeen: [], bossOrder: ['eye', 'beast', 'lord', 'lordx'], stageGroups: [], stageLayout: [] };
 let hitstop = 0, shake = 0;
 
 // ============ Tiện ích ============
@@ -983,6 +987,7 @@ function dashSpeed() { return T.dashSpeed * CH.dash * (1 + eqv('dash')); }
 function cdFull(k) { return SKILLS[k].cd * T.skillCd * (G.up[k] ? 0.7 : 1) * (1 - Math.min(0.5, eqv('cdr'))); }
 function enMul() { return 1 + eqv('en'); }
 function doJump() {
+  sfx('jump');
   P.vy = -T.jumpV; P.onGround = false; P.coyote = 0; buf.jump = 0; P.canCut = true; P.ground = null;
   if (P.state === 'dash' || inp.dashHeld) P.dashJump = true;
   P.state = 'move'; P.h = 46; P.oneShot = null;
@@ -991,6 +996,7 @@ function doJump() {
 }
 // nhảy đôi: Kiếm Sĩ lộn người bằng khung có sẵn; nhân vật pixel xoay tròn 1 vòng
 function doDoubleJump() {
+  sfx('jump');
   buf.jump = 0; P.airJumps--;
   P.vy = -T.jumpV * T.djump; P.canCut = true; P.state = 'move'; P.h = 46; P.wjT = 0; P.djT = 0.32; P.lock = 0;
   P.spin = CH.kind === 'ebros' ? 0 : 0.32;
@@ -1018,8 +1024,9 @@ function startDash(dir) {
   buf.dash = 0;
   P.state = 'dash'; P.dashT = T.dashTime; if (dir) P.face = dir; P.h = 26; P.oneShot = null;
   if (P.hasteT > 0) newSwing();
-  playA('dash');
+  playA('dash'); sfx('dash');
   dust(P.x - P.face * 8, P.y, 6, -P.face);
+  if (bn('firedash') && P.onGround) { const d = dashSpeed() * T.dashTime, x1 = clamp(P.x + P.face * d, WALL + 6, AW - WALL - 6); zones.push({ kind: 'flame', x0: Math.min(P.x, x1), x1: Math.max(P.x, x1), y: P.y, life: 2 + bn('firedash') * 0.5, max: 2, tick: 0.2 }); }
   if (has('knife')) for (const vy of [-70, 0, 70]) shots.push({ kind: 'knife', x: P.x + P.face * 12, y: P.y - 26, vx: P.face * 620, vy, dir: P.face, life: 0.6, max: 0.6, hit: new Set(), dmg: [600, 820], lines: 1, mul: um('knife') });
   if (has('mine') && P.onGround) {
     const mine = zones.filter(z => z.kind === 'mine' && z.small);
@@ -1134,6 +1141,7 @@ function dslashState(dt) {
     if (P.hitSet.has(t) || !overlap(hb, boxOf(at))) continue;
     P.hitSet.add(t);
     meleeHit(at, P.dsChain === 3 ? DSLASH3 : DSLASH, P.face);
+    if (bn('stormdash')) later(0.05, () => skyStrike(at, { dmg: [750, 1000], lines: 1 + bn('stormdash'), mul: 1, kb: [0, -140], stun: 0.5, style: 'bolt' }));
   }
   // nối lướt chém: bấm Chém lúc gần hết đà (tối đa 3 lần liền, đổi hướng được)
   if (buf.attack > 0 && P.dsT < 0.14 && P.dsChain < 3) { const d = (inp.right ? 1 : 0) - (inp.left ? 1 : 0); if (d) P.face = d; startDashSlash(true); return; }
@@ -1265,16 +1273,21 @@ function hurtPlayer(d, fromX) {
   if (P.dead || P.inv > 0 || G.mode !== 'play') return;
   if (P.shieldT > 0) { fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 26, life: 0.2, max: 0.2, col: '#ffe07a' }); P.inv = 0.3; return; }
   if (P.parryT > 0) { parryCounter(); return; }
+  if (P.wardN > 0) {   // Hộ Thân Phù
+    P.wardN--; P.inv = 0.7; sfx('block');
+    fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 18, life: 0.35, max: 0.35, col: '#7fe0ff' }); pushNumbers(P, [{ v: 'CHẶN', crit: false }], 'block'); return;
+  }
   if (has('shield') && P.blockCD <= 0) {
     P.blockCD = 15 * (G.up.shield ? 0.7 : 1); P.inv = 0.7;
     fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 18, life: 0.35, max: 0.35, col: '#ffe07a' });
-    pushNumbers(P, [{ v: 'CHẶN', crit: false }], 'block');
+    pushNumbers(P, [{ v: 'CHẶN', crit: false }], 'block'); sfx('block');
     shake = Math.max(shake, 3);
     return;
   }
   d = Math.round(d * T.monDmg * (has('earth') ? 0.75 : 1) * (1 - Math.min(0.6, (G.eq ? G.eq.def : 0) / 100))); if (d <= 0) return;
   P.calmT = 0;
   if (has('parry')) later(0.1, () => { if (!P.dead) { fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 10, life: 0.25, max: 0.25, col: '#a0d8ff', grow: 300 }); areaHit(P.x, P.y - 24, 75, { dmg: [700, 950], lines: 2, mul: um('parry'), kb: [220, -200], stun: 0.5, style: 'norm' }); } });
+  sfx('hurt');
   P.hp = Math.max(0, P.hp - d); P.inv = 1.1; P.hurtFlash = 0.14;
   const dir = P.x < fromX ? -1 : 1;
   P.state = 'hurt'; P.hurtT = 0.28; P.vx = dir * 170; P.vy = -260; P.onGround = false; P.ground = null; P.h = 46; P.lock = 0; P.spin = 0;
@@ -1302,7 +1315,7 @@ function rollDamage(range, lines, mul, forceCrit) {
   const out = [], bonus = dmgBonus();
   for (let i = 0; i < lines; i++) {
     const crit = forceCrit || Math.random() < T.crit + CH.crit + (has('critical') ? 0.12 : 0) + (G.eq ? G.eq.crit / 100 : 0);
-    out.push({ v: Math.round(rnd(range[0], range[1]) * (mul || 1) * CH.dmg * bonus * (crit ? 1.8 : 1)), crit });
+    out.push({ v: Math.round(rnd(range[0], range[1]) * (mul || 1) * CH.dmg * bonus * (crit ? 1.8 + 0.25 * bn('heavy') : 1)), crit });
   }
   return out;
 }
@@ -1412,6 +1425,7 @@ function doHits(c, air) {
 function newSwing() { P.hitSet.clear(); P.cloneHit[-1].clear(); P.cloneHit[1].clear(); P.cloneArc = {}; P.boomFired = false; }
 // vệt chém trăng khuyết cho nhân vật pixel (Kiếm Sĩ có sẵn vệt trong sprite); Song Trảm thêm vệt thứ hai
 function swingFx(c, hb) {
+  sfx('swing', 0.05);
   const cy = (hb[2] + hb[3]) / 2, r = (hb[1] - hb[0]) * 0.55, col = G.elem ? SKILLS[G.elem].col : '#ffffff';
   if (CH.kind !== 'ebros') fx.push({ type: 'arc', x: P.x + P.face * 8, y: cy, face: P.face, r, life: 0.14, max: 0.14, col, big: c.lines >= 4 });
   if (has('twin')) later(0.07, () => fx.push({ type: 'arc', x: P.x + P.face * 10, y: cy + 6, face: P.face, r: r * 0.9, life: 0.12, max: 0.12, col: '#ff9ad0', flipY: true }));
@@ -1429,6 +1443,7 @@ function meleeHit(at, c, dir) {
   if (back && !r.blocked) { const [x, y] = centerOf(at); fx.push({ type: 'smoke', x, y, vx: 0, vy: -30, r: 10, life: 0.4, max: 0.4, col: '#3a1a66', glow: true }); fx.push({ type: 'label', x, y: y - 30, txt: 'SAU LƯNG!', col: '#c9a8ff', life: 0.6, max: 0.6, size: 9 }); }
   hitstop = Math.max(hitstop, (c.stop || 0.04) * T.hitstop);
   const anyCrit = r.vals.some(v => v.crit);
+  sfx(anyCrit ? 'crit' : 'hit', 0.035);
   shake = Math.max(shake, (c.shake || 2) + (anyCrit ? 4 : 0));
   const bx = boxOf(at), hx = clamp(P.x + dir * 26, bx[0], bx[1]), hy = (bx[2] + bx[3]) / 2;
   if (r.blocked) {
@@ -1465,6 +1480,7 @@ function meleeHit(at, c, dir) {
   }
   if (has('light') && anyCrit) lightBurst(hx, hy, t, c);
   if (P.rageT > 0) healAcc(1);
+  if (bn('echo') && Math.random() < 0.12 * bn('echo')) shots.push({ x: P.x + P.face * 18, y: P.y - 28, dir: P.face, vy: 0, life: 0.7, max: 0.7, hit: new Set(), dmg: c.dmg, lines: 1, mul: 0.6 });
   if (has('chain') && !t.dead && ++P.chainN >= 6) {   // Xích Hồn: kéo 1 con về
     P.chainN = 0;
     const e = nearestProxies(hittables().filter(o => targetOf(o) !== t && !isBig(targetOf(o))), P.x, P.y - 24).filter(e => e.d < 240).sort((a, b) => a.d - b.d)[0];
@@ -1521,8 +1537,11 @@ function kill(t) {
   if (has('hole')) zones.push({ kind: 'pull', x: cx, y: cy, r: 95, life: 0.45, max: 0.45 });
   if (has('dragon') && G.killCount % 25 === 0) summonDragon(false);
   // rơi vàng; tinh anh 15% rơi trang bị
-  dropLoot(cx, cy, Math.round((t.elite ? 14 : 2 + Math.floor(Math.random() * 3)) * (1 + G.stage * 0.05)),
-    t.elite && Math.random() < 0.15 ? makeItem(SLOTS[Math.floor(Math.random() * 6)][0], rollRarity(0.2 + G.stage * 0.03)) : null);
+  sfx('kill', 0.05);
+  if (bn('feast') && Math.random() < 0.2) lifeGain(2 * bn('feast'));
+  if (bn('burst') && Math.random() < 0.15 * bn('burst')) later(0.1, () => { explode(cx, cy, 1.2); areaHit(cx, cy, 62, { dmg: [900, 1200], lines: 2, mul: 1, kb: [150, -220], stun: 0.4, style: 'fire' }); });
+  dropLoot(cx, cy, Math.round((t.elite ? 14 : 2 + Math.floor(Math.random() * 3)) * (1 + G.stage * 0.05) * (G.goldMul || 1) * (1 + 0.3 * bn('greed'))),
+    t.elite && Math.random() < 0.15 * ((G.goldMul || 1) > 1 ? 3 : 1) ? makeItem(SLOTS[Math.floor(Math.random() * 6)][0], rollRarity(0.2 + G.stage * 0.03)) : null);
 }
 function chainBolt(src, c) {
   const [sx, sy] = centerOf(src), me = targetOf(src);
@@ -1585,6 +1604,7 @@ function trySkill(i) {
 }
 // tung chiêu: vòng sáng + tia màu kỹ năng + tên chiêu bay lên trên đầu
 function castFx(k) {
+  sfx('cast');
   const s = SKILLS[k], cy = P.y - 24;
   fx.push({ type: 'ring', x: P.x, y: cy, r: 10, life: 0.3, max: 0.3, col: s.col, grow: 240 });
   fx.push({ type: 'flare', x: P.x, y: cy, r: 46, life: 0.22, max: 0.22, col: hexRgb(s.col) });
@@ -1600,6 +1620,7 @@ function areaHit(cx, cy, radius, spec, after) {
   }
 }
 function skyStrike(at, spec) {
+  sfx('bolt', 0.05);
   if (targetOf(at).dead) return;
   const [x, y] = centerOf(at);
   fx.push({ type: 'bolt', x0: x + rnd(-30, 30), y0: -10, x1: x, y1: y, life: 0.3, max: 0.3, thick: true });
@@ -1799,7 +1820,7 @@ function react(t, els, at) {
   else if ((t.sprout || t.root > 0) && els.includes('fire')) r = 'blaze';
   else if (t.poison && t.poison.n >= 3 && els.includes('fire')) r = 'toxic';
   if (!r) return;
-  t.reactCD = G.time + 0.8; G.reacts = (G.reacts || 0) + 1;
+  t.reactCD = G.time + 0.8; G.reacts = (G.reacts || 0) + 1; sfx('react', 0.06);
   const src = at || t, b = boxOf(src), x = (b[0] + b[1]) / 2, y = (b[2] + b[3]) / 2, big = isBig(t);
   fx.push({ type: 'label', x, y: b[2] - 14, txt: REACT[r].name + '!', col: REACT[r].col, life: 0.85, max: 0.85, size: 10 });
   fx.push({ type: 'flare', x, y, r: 52, life: 0.25, max: 0.25, col: hexRgb(REACT[r].col) });
@@ -2268,7 +2289,7 @@ function tryFusion() {
   const fu = fusionOf(G.skills);
   if (!fu || G.mode !== 'play' || P.dead) return;
   if (G.energy < 100) { G.slotDeny[3] = 0.3; return; }
-  G.energy = 0; G.slotPop[3] = 1;
+  G.energy = 0; G.slotPop[3] = 1; sfx('fusion', 0.2);
   G.flash = 0.4; G.flashC = '255,230,160'; shake = Math.max(shake, 8); hitstop = Math.max(hitstop, 0.12);
   G.fuBanner = 1.8; G.fuName = fu.name; G.fuTier = fu.tier || 2;
   fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 10, life: 0.5, max: 0.5, col: '#ffe08a', grow: 420 });
@@ -2957,6 +2978,7 @@ function bigImpact(x) {
   G.nameT = 0;
 }
 function bossDie() {
+  sfx('roar', 1);
   const b = boss;
   { const [bx, by] = centerOf(b); dropLoot(bx, by, 80 * (1 + (G.bossLv || 0)), makeItem(SLOTS[Math.floor(Math.random() * 6)][0], rollRarity(0.8 + (G.bossLv || 0) * 0.5))); }
   b.state = 'dying'; b.st = 0; b.boomT = 0;
@@ -3359,6 +3381,7 @@ function startStage(i) {
   if (st.boss) {
     const slot = BOSS_STAGES.indexOf(i), kind = G.bossOrder[slot];
     G.bossKind = kind; setBossLevel(slot);
+    sfx('warning', 1); G.goldMul = 1; G.wasElite = false;
     G.phase = 'warning'; G.bossName = BOSSES[kind].name; G.bossSub = (slot === 3 ? 'TRÙM CUỐI · ' : '') + BOSSES[kind].sub; G.bossBar = 0; return;
   }
   G.phase = 'banner';
@@ -3371,6 +3394,10 @@ function startStage(i) {
     const g = pool[Math.floor(Math.random() * pool.length)].map(sp => !sp.includes('*') && Math.random() < 0.07 * (pw - 1) ? sp.replace(':', '*:') : sp);
     G.groups.splice(1 + Math.floor(Math.random() * G.groups.length), 0, g); n += g.length;
   }
+  G.wasElite = !!G.elitePath; G.goldMul = G.elitePath ? 2 : 1;
+  if (G.elitePath) { G.groups = G.groups.map(g => g.map(sp => !sp.includes('*') && Math.random() < 0.5 ? sp.replace(':', '*:') : sp)); G.elitePath = false; }
+  if (bn('ward')) P.wardN = bn('ward');
+  if (bn('energy')) G.energy = Math.max(G.energy, Math.min(100, 30 * bn('energy')));
   G.total = G.groups.reduce((a, g) => a + g.length, 0);
   G.spawnSt = { spd: st.spd * (1 + 0.03 * (pw - 1)), hp: st.hp * (1 + 0.06 * (pw - 1)) }; G.maxOn = st.max + (pw - 1) * 2;
   G.spawnT = 1.6;
@@ -3398,7 +3425,7 @@ function updateGame(dt) {
         if (heal > 0) { P.hp += heal; pushNumbers(P, [{ v: heal, crit: false }], 'heal'); }
       }
     }
-    if (G.phase === 'clear' && G.pt > 2.2) startStage(G.stage + 1);
+    if (G.phase === 'clear' && G.pt > 2.2) { G.phase = 'choosing'; afterStage(); }
   } else {
     if (G.phase === 'warning' && G.pt > 2.9) { G.phase = 'entrance'; G.pt = 0; ({ eye: spawnBoss, beast: spawnBeast, lord: () => spawnLord(false), lordx: () => spawnLord(true) })[G.bossKind](); scaleBoss(); }
     if (boss) ({ boss: updateBoss, beast: updateBeast, lord: updateLord })[boss.kind](G.slowT > 0 ? dt * 0.25 : dt);
@@ -3457,6 +3484,7 @@ function dust(x, y, n, dir, sz) {
 }
 function poof(x, y) { for (let i = 0; i < 12; i++) { const a = rnd(0, 6.28); fx.push({ type: 'spark', x, y, vx: Math.cos(a) * 140, vy: Math.sin(a) * 140, life: 0.3, max: 0.3, col: '#e08bff' }); } }
 function explode(x, y, size) {
+  sfx(size >= 2 ? 'bigboom' : 'boom', size >= 2 ? 0.25 : 0.09);
   fx.push({ type: 'boom', x, y, r0: 6 * size, r1: 34 * size, life: 0.32, max: 0.32 });
   for (let i = 0; i < 10 * size; i++) {
     const a = rnd(0, 6.28), sp = rnd(60, 260) * Math.sqrt(size);
@@ -3532,6 +3560,7 @@ function frame(now) {
     while (acc >= STEP && n++ < 8) { try { step(STEP); } catch (e) { loopError('step', e); } acc -= STEP; }
     if (acc > STEP * 8) acc = 0;   // máy quá chậm: bỏ bớt, không dồn bước
   }
+  try { setMusic(musicFor()); musicTick(); } catch (e) { loopError('music', e); }
   try { render(now / 1000); }
   catch (e) {
     loopError('render', e);
@@ -4765,6 +4794,7 @@ function showPick(kind) {
   pickEl.hidden = false;
 }
 function showEnd(won) {
+  sfx(won ? 'win' : 'lose', 1);
   flushPickups(); commitRun();
   G.mode = 'end';
   let best = 0;
@@ -4776,6 +4806,7 @@ function showEnd(won) {
     `${CH.name} · ${won ? 'Hạ cả 4 boss, xong 20 màn' : `Dừng ở màn ${G.stage + 1}/20`} · ${G.kills} quái · ${m}:${String(s).padStart(2, '0')}<br>` +
     `Kỹ năng: ${G.skills.map(k => SKILLS[k].emoji + ' ' + SKILLS[k].name + (G.up[k] ? ' ★' : '')).join(', ') || '—'}<br>` +
     `Boss lần này: ${G.bossOrder.map(k => BOSSES[k].name).join(' → ')}<br>` +
+    `Bùa: ${Object.keys(G.boons).map(k => BOONS[k].emoji + (G.boons[k] > 1 ? '×' + G.boons[k] : '')).join(' ') || '—'}<br>` +
     `Nhặt được: <b style="color:#ffe08a">🪙 ${G.gold}</b>${G.loot.length ? ' · ' + G.loot.map(it => `<b style="color:${RARITY[it.rar].col}">${it.name}</b>`).join(', ') : ''}<br>` +
     `Điểm <b style="color:#ffe08a">${G.score.toLocaleString('vi-VN')}</b> · Kỷ lục <b style="color:#ffe08a">${best.toLocaleString('vi-VN')}</b>`;
   endEl.hidden = false;
@@ -4792,7 +4823,8 @@ function resetGame() {
   P.trail.length = 0;
   Object.assign(G, { stage: 0, phase: '', pt: 0, groups: [], total: 0, score: 0, kills: 0, killCount: 0, time: 0, skills: [], up: {}, elem: null, cd: {},
     energy: 0, slowT: 0, fuBanner: 0, marks: [], lava: { state: 'off', t: 0 }, flash: 0, nameT: -1, bossBar: 0, endT: -1, won: false, pickNext: false,
-    offered: [], prevSeen: loadSeen(), bossLv: 0, pr: 1, maxOn: 0, spawnSt: null, reacts: 0, fuTier: 2, gold: 0, loot: [], committed: false });
+    offered: [], prevSeen: loadSeen(), bossLv: 0, pr: 1, maxOn: 0, spawnSt: null, reacts: 0, fuTier: 2, gold: 0, loot: [], committed: false, boons: {}, elitePath: false, wasElite: false, goldMul: 1 });
+  P.wardN = 0;
   for (const k in MON_BASE) MON[k] = MON_BASE[k];
   combo.hits = 0; combo.t = 0; shake = 0; hitstop = 0;
   playA('idle');
@@ -5035,9 +5067,9 @@ function updatePickups(dt) {
       p.x += dx / d * Math.min(d, sp * dt); p.y += dy / d * Math.min(d, sp * dt);
       if (d < 16) {
         pickups.splice(i, 1);
-        if (p.kind === 'coin') { G.gold += p.val; fx.push({ type: 'spark', x: p.x, y: p.y, vx: 0, vy: -60, life: 0.2, max: 0.3, col: '#ffe08a' }); }
+        if (p.kind === 'coin') { G.gold += p.val; sfx('coin', 0.06); fx.push({ type: 'spark', x: p.x, y: p.y, vx: 0, vy: -60, life: 0.2, max: 0.3, col: '#ffe08a' }); }
         else {
-          G.loot.push(p.item);
+          G.loot.push(p.item); sfx('item');
           const R = RARITY[p.item.rar];
           fx.push({ type: 'label', x: P.x, y: P.y - 72, txt: `+ ${p.item.name} (${R.name})`, col: R.col, life: 1.6, max: 1.6, size: 10 });
           fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 10, life: 0.4, max: 0.4, col: R.col, grow: 240 });
@@ -5276,6 +5308,190 @@ function commitRun() {
 }
 SAVE = loadSave();
 
+// ============ Âm thanh: tạo tiếng bằng Web Audio (không cần file), nhạc nền tự soạn theo nhịp ============
+const AU = { ctx: null, master: null, sfx: null, mus: null, noise: null, on: true, last: {}, voices: 0, music: '', step: 0, next: 0 };
+try { AU.on = localStorage.getItem('ksbt-sound') !== 'off'; } catch (e) {}
+function audioInit() {   // phải gọi sau một lần chạm / bấm (luật trình duyệt)
+  if (AU.ctx) { if (AU.ctx.state === 'suspended') AU.ctx.resume(); return; }
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+  try {
+    const c = AU.ctx = new AC();
+    AU.master = c.createGain(); AU.master.gain.value = AU.on ? 0.8 : 0; AU.master.connect(c.destination);
+    const comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 6; comp.connect(AU.master);
+    AU.sfx = c.createGain(); AU.sfx.gain.value = 0.55; AU.sfx.connect(comp);
+    AU.mus = c.createGain(); AU.mus.gain.value = 0.22; AU.mus.connect(comp);
+    const n = c.sampleRate, buf = c.createBuffer(1, n, n), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    AU.noise = buf; AU.next = c.currentTime + 0.1;
+  } catch (e) { AU.ctx = null; }
+}
+['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, audioInit, { passive: true }));
+function setSound(on) {
+  AU.on = on; try { localStorage.setItem('ksbt-sound', on ? 'on' : 'off'); } catch (e) {}
+  if (AU.master) AU.master.gain.setTargetAtTime(on ? 0.8 : 0, AU.ctx.currentTime, 0.05);
+  const b = document.getElementById('sndBtn'); if (b) b.textContent = on ? '🔊' : '🔇';
+}
+// một tiếng: dao động (sine/square/triangle/saw) hoặc nhiễu, có bao biên độ + quét tần số + bộ lọc
+function tone(o) {
+  const c = AU.ctx, t = c.currentTime + (o.at || 0), dur = o.dur || 0.1;
+  let src;
+  if (o.type === 'noise') { src = c.createBufferSource(); src.buffer = AU.noise; src.loop = true; src.playbackRate.value = o.rate || 1; }
+  else { src = c.createOscillator(); src.type = o.type || 'sine'; src.frequency.setValueAtTime(o.f || 440, t); if (o.f2) src.frequency.exponentialRampToValueAtTime(Math.max(20, o.f2), t + dur); }
+  let node = src;
+  if (o.filter) {
+    const fl = c.createBiquadFilter(); fl.type = o.filter; fl.frequency.setValueAtTime(o.ff || 1200, t); fl.Q.value = o.q || 1;
+    if (o.ff2) fl.frequency.exponentialRampToValueAtTime(Math.max(30, o.ff2), t + dur);
+    node.connect(fl); node = fl;
+  }
+  const g = c.createGain(), v = o.vol || 0.3;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + (o.att || 0.004));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  node.connect(g); g.connect(o.bus || AU.sfx);
+  src.start(t); src.stop(t + dur + 0.05);
+  AU.voices++; src.onended = () => { AU.voices--; };
+}
+const SFX = {
+  swing: () => tone({ type: 'noise', filter: 'bandpass', ff: 2600, ff2: 700, q: 1.2, dur: 0.11, vol: 0.22 }),
+  hit: () => { tone({ type: 'noise', filter: 'lowpass', ff: 2400, ff2: 400, dur: 0.07, vol: 0.32 }); tone({ type: 'sine', f: 170, f2: 60, dur: 0.09, vol: 0.4 }); },
+  crit: () => { SFX.hit(); tone({ type: 'triangle', f: 1600, f2: 2400, dur: 0.12, vol: 0.18, at: 0.01 }); tone({ type: 'square', f: 900, f2: 1800, dur: 0.06, vol: 0.06 }); },
+  hit2: () => tone({ type: 'noise', filter: 'bandpass', ff: 1400, q: 2, dur: 0.05, vol: 0.14 }),
+  kill: () => { tone({ type: 'sine', f: 220, f2: 50, dur: 0.18, vol: 0.4 }); tone({ type: 'noise', filter: 'lowpass', ff: 1200, ff2: 200, dur: 0.16, vol: 0.2 }); },
+  boom: () => { tone({ type: 'noise', filter: 'lowpass', ff: 900, ff2: 80, dur: 0.45, vol: 0.45 }); tone({ type: 'sine', f: 90, f2: 35, dur: 0.4, vol: 0.5 }); },
+  bigboom: () => { tone({ type: 'noise', filter: 'lowpass', ff: 700, ff2: 40, dur: 1.1, vol: 0.6 }); tone({ type: 'sine', f: 70, f2: 25, dur: 1, vol: 0.7 }); },
+  bolt: () => { tone({ type: 'noise', filter: 'highpass', ff: 3000, dur: 0.18, vol: 0.25 }); for (let i = 0; i < 3; i++) tone({ type: 'square', f: 300 + Math.random() * 900, dur: 0.03, vol: 0.06, at: i * 0.035 }); },
+  dash: () => tone({ type: 'noise', filter: 'highpass', ff: 900, ff2: 3500, dur: 0.14, vol: 0.18 }),
+  jump: () => tone({ type: 'sine', f: 260, f2: 620, dur: 0.1, vol: 0.12 }),
+  cast: () => { tone({ type: 'sawtooth', f: 220, f2: 880, filter: 'lowpass', ff: 1800, dur: 0.22, vol: 0.12 }); tone({ type: 'triangle', f: 660, f2: 1320, dur: 0.18, vol: 0.1, at: 0.04 }); },
+  fusion: () => { [262, 330, 392, 523].forEach((f, i) => tone({ type: 'sawtooth', f, filter: 'lowpass', ff: 2200, dur: 0.9, vol: 0.09, att: 0.05, at: i * 0.05 })); tone({ type: 'noise', filter: 'bandpass', ff: 400, ff2: 3000, dur: 0.7, vol: 0.2, att: 0.2 }); },
+  hurt: () => { tone({ type: 'square', f: 220, f2: 80, dur: 0.16, vol: 0.14, filter: 'lowpass', ff: 1400 }); tone({ type: 'noise', filter: 'lowpass', ff: 900, dur: 0.1, vol: 0.2 }); },
+  block: () => { tone({ type: 'triangle', f: 1200, f2: 800, dur: 0.18, vol: 0.18 }); tone({ type: 'triangle', f: 1800, dur: 0.12, vol: 0.1 }); },
+  coin: () => { tone({ type: 'triangle', f: 1320, dur: 0.06, vol: 0.12 }); tone({ type: 'triangle', f: 1760, dur: 0.1, vol: 0.12, at: 0.05 }); },
+  item: () => [523, 659, 784, 1047].forEach((f, i) => tone({ type: 'triangle', f, dur: 0.18, vol: 0.14, at: i * 0.07 })),
+  react: () => { tone({ type: 'square', f: 440, f2: 1320, dur: 0.12, vol: 0.08 }); tone({ type: 'noise', filter: 'bandpass', ff: 2000, dur: 0.1, vol: 0.12 }); },
+  ui: () => tone({ type: 'triangle', f: 880, f2: 1100, dur: 0.06, vol: 0.12 }),
+  boon: () => [659, 880, 1175].forEach((f, i) => tone({ type: 'triangle', f, dur: 0.22, vol: 0.12, at: i * 0.06 })),
+  warning: () => { for (let i = 0; i < 4; i++) { tone({ type: 'square', f: 880, dur: 0.22, vol: 0.09, at: i * 0.5, filter: 'lowpass', ff: 2000 }); tone({ type: 'square', f: 660, dur: 0.22, vol: 0.09, at: i * 0.5 + 0.25, filter: 'lowpass', ff: 2000 }); } },
+  roar: () => { tone({ type: 'sawtooth', f: 110, f2: 55, filter: 'lowpass', ff: 600, dur: 1.1, vol: 0.35, att: 0.08 }); tone({ type: 'noise', filter: 'lowpass', ff: 500, dur: 1, vol: 0.3, att: 0.1 }); },
+  win: () => [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone({ type: 'triangle', f, dur: 0.3, vol: 0.16, at: i * 0.13 })),
+  lose: () => [392, 330, 262, 196].forEach((f, i) => tone({ type: 'triangle', f, dur: 0.35, vol: 0.14, at: i * 0.2 })),
+};
+// gọi tiếng: chặn lặp quá dày cùng một tiếng và quá nhiều tiếng cùng lúc
+function sfx(name, gap) {
+  if (!AU.ctx || !AU.on || AU.ctx.state !== 'running' || AU.voices > 40) return;
+  const now = AU.ctx.currentTime;
+  if (now - (AU.last[name] || 0) < (gap === undefined ? 0.04 : gap)) return;
+  AU.last[name] = now;
+  try { SFX[name](); } catch (e) {}
+}
+// ---- nhạc nền: bộ lặp 16 nhịp, hợp âm thứ; trận / boss / sảnh khác nhịp và hòa âm ----
+const SONG = {
+  battle: { bpm: 128, root: 110, prog: [0, 0, -4, -2], scale: [0, 3, 5, 7, 10, 12], kick: [0, 4, 8, 12, 14], hat: true, lead: true },
+  boss: { bpm: 150, root: 98, prog: [0, 1, 0, -2], scale: [0, 1, 3, 7, 8, 12], kick: [0, 3, 6, 8, 11, 12, 14], hat: true, lead: true },
+  lobby: { bpm: 84, root: 131, prog: [0, -3, -5, -1], scale: [0, 2, 4, 7, 9, 12], kick: [0, 8], hat: false, lead: true },
+};
+function setMusic(name) { if (AU.music !== name) { AU.music = name; AU.step = 0; } }
+function musicTick() {
+  if (!AU.ctx || AU.ctx.state !== 'running' || !AU.music) return;
+  const S2 = SONG[AU.music], sp = 60 / S2.bpm / 4, c = AU.ctx;
+  if (AU.next < c.currentTime) AU.next = c.currentTime + 0.05;
+  while (AU.next < c.currentTime + 0.2) {   // xếp lịch trước 0,2 giây
+    const at = AU.next - c.currentTime, s = AU.step % 16, bar = Math.floor(AU.step / 16) % 4, root = S2.root * Math.pow(2, S2.prog[bar] / 12);
+    const o = { bus: AU.mus, at };
+    if (S2.kick.includes(s)) tone(Object.assign({ type: 'sine', f: 120, f2: 45, dur: 0.16, vol: 0.55 }, o));
+    if (S2.hat && s % 2 === 1) tone(Object.assign({ type: 'noise', filter: 'highpass', ff: 7000, dur: 0.03, vol: 0.12 }, o));
+    if (S2.hat && (s === 4 || s === 12)) tone(Object.assign({ type: 'noise', filter: 'bandpass', ff: 1800, dur: 0.12, vol: 0.2 }, o));
+    if (s % 4 === 0 || (AU.music !== 'lobby' && s % 4 === 3)) tone(Object.assign({ type: 'sawtooth', f: root, filter: 'lowpass', ff: 420, dur: sp * 2.5, vol: 0.32 }, o));
+    if (AU.music === 'lobby' && s === 0) [0, 4, 7].forEach(iv => tone(Object.assign({ type: 'triangle', f: root * 2 * Math.pow(2, iv / 12), dur: sp * 15, vol: 0.06, att: 0.4 }, o)));
+    if (S2.lead && (AU.music === 'lobby' ? s % 4 === 2 : [0, 3, 6, 10, 12, 14].includes(s))) {
+      const deg = S2.scale[(s * 7 + bar * 3) % S2.scale.length];
+      tone(Object.assign({ type: AU.music === 'lobby' ? 'triangle' : 'square', f: root * 4 * Math.pow(2, deg / 12), filter: 'lowpass', ff: 2600, dur: sp * 1.6, vol: AU.music === 'lobby' ? 0.08 : 0.05 }, o));
+    }
+    AU.next += sp; AU.step++;
+  }
+}
+function musicFor() {
+  if (G.mode === 'play') return STAGES[G.stage] && STAGES[G.stage].boss && boss ? 'boss' : 'battle';
+  if (G.mode === 'select' && G.skills.length) return 'battle';
+  return 'lobby';
+}
+// ============ Bùa: hết mỗi màn quái chọn 1 trong 3, cộng dồn tới hết trận ============
+const BOONS = {
+  sharp: { name: 'Lưỡi Sắc', emoji: '🗡️', desc: 'Công +8%.', stat: { atk: 8 } },
+  eagle: { name: 'Mắt Ưng', emoji: '🎯', desc: 'Chí mạng +5%.', stat: { crit: 5 } },
+  quick: { name: 'Tay Nhanh', emoji: '✋', desc: 'Tốc đánh +8%.', stat: { aspd: 8 } },
+  wind: { name: 'Chân Gió', emoji: '👟', desc: 'Tốc chạy +8%, lướt xa +8%.', stat: { spd: 8, dash: 8 } },
+  bronze: { name: 'Da Đồng', emoji: '🛡️', desc: 'Giảm sát thương nhận 8%.', stat: { def: 8 } },
+  vigor: { name: 'Sinh Lực', emoji: '❤️', desc: 'Máu tối đa +15 và hồi ngay 15 máu.', stat: { hp: 15 } },
+  leech: { name: 'Hút Hồn', emoji: '🩸', desc: 'Hút máu +1,5%.', stat: { ls: 1.5 } },
+  calm: { name: 'Tĩnh Tâm', emoji: '🧘', desc: 'Giảm hồi chiêu 8%.', stat: { cdr: 8 } },
+  fury: { name: 'Nộ Khí', emoji: '💢', desc: 'Nạp hợp kích nhanh hơn 15%.', stat: { en: 15 } },
+  heavy: { name: 'Trọng Kích', emoji: '🔨', desc: 'Chí mạng đau hơn: +25% sát thương chí mạng.' },
+  firedash: { name: 'Lướt Lửa', emoji: '🔥', desc: 'Lướt để lại vệt lửa trên sàn, đốt quái 2 giây.' },
+  stormdash: { name: 'Lướt Sấm', emoji: '⚡', desc: 'Lướt chém gọi sét đánh xuống con quái trúng đòn.' },
+  echo: { name: 'Kiếm Vọng', emoji: '🌙', desc: '12% nhát chém bắn thêm một luồng kiếm khí.' },
+  greed: { name: 'Tham Vàng', emoji: '💰', desc: 'Nhặt vàng nhiều hơn 30%.' },
+  feast: { name: 'Thực Hồn', emoji: '🍖', desc: 'Hạ quái có 20% hồi 2 máu.' },
+  burst: { name: 'Xác Nổ', emoji: '💥', desc: 'Quái chết có 15% nổ tung, gây sát thương quái bên cạnh.' },
+  ward: { name: 'Hộ Thân Phù', emoji: '🔰', desc: 'Đầu mỗi màn có 1 lớp khiên chặn 1 đòn.' },
+  energy: { name: 'Khởi Động', emoji: '🔋', desc: 'Đầu mỗi màn có sẵn 30% năng lượng hợp kích.' },
+};
+const bn = k => (G.boons && G.boons[k]) || 0;
+function gainBoon(k) {
+  G.boons[k] = bn(k) + 1;
+  const st = BOONS[k].stat;
+  if (st) for (const s in st) {
+    G.eq[s] = (G.eq[s] || 0) + st[s];
+    if (s === 'hp') { P.maxHp += st[s]; P.hp = Math.min(P.maxHp, P.hp + st[s]); }
+  }
+  sfx('boon');
+}
+function boonOffer() {   // 3 bùa khác nhau, ưu tiên bùa chưa có
+  return shuffle(Object.keys(BOONS)).sort((a, b) => bn(a) - bn(b) + (Math.random() - 0.5) * 1.5).slice(0, 3);
+}
+// ---- màn hình chọn chung: thẻ có biểu tượng, tên, nhãn, mô tả; thêm nút phụ ----
+function showChoice(title, sub, items, extra) {
+  flushPickups();
+  G.mode = 'select'; ptrs.clear(); joy.id = null;
+  const cards = document.getElementById('cards');
+  document.getElementById('pickTitle').textContent = title;
+  document.getElementById('pickSub').textContent = sub;
+  cards.innerHTML = '';
+  for (const it of items) {
+    const b = document.createElement('button'); b.className = 'card' + (it.cls ? ' ' + it.cls : '') + (it.off ? ' off' : '');
+    b.innerHTML = `${it.badge ? `<em class="new">${it.badge}</em>` : ''}<span class="ic">${it.emoji}</span><b>${it.name}</b>${it.tag ? `<span class="tag">${it.tag}</span>` : ''}<span>${it.desc}</span>${it.price ? `<span class="fu">${it.price}</span>` : ''}`;
+    b.onclick = () => { if (it.off) return; sfx('ui'); it.pick(); };
+    cards.append(b);
+  }
+  if (extra) { const b = document.createElement('button'); b.className = 'btn go'; b.textContent = extra.label; b.onclick = () => { sfx('ui'); extra.pick(); }; cards.append(b); }
+  pickEl.hidden = false;
+}
+function resume(next) { pickEl.hidden = true; ptrs.clear(); G.mode = 'play'; startStage(next); }
+// hết màn quái: bùa -> (có thể) ngã rẽ -> (có thể) thương nhân -> màn sau
+function afterStage(bonus) {
+  const next = G.stage + 1;
+  showChoice(bonus ? 'Thưởng đường tinh anh: chọn thêm 1 bùa' : `Xong màn ${G.stage + 1}! Chọn 1 bùa`, 'Bùa cộng dồn tới hết trận. Có bùa rồi chọn tiếp thì mạnh thêm.',
+    boonOffer().map(k => ({ emoji: BOONS[k].emoji, name: BOONS[k].name, desc: BOONS[k].desc, tag: bn(k) ? `Đang có ×${bn(k)}` : 'Mới',
+      pick: () => { gainBoon(k); if (G.wasElite) { G.wasElite = false; afterStage(true); } else pathChoice(next); } })));
+}
+function pathChoice(next) {
+  if (STAGES[next].boss || Math.random() > 0.45) { resume(next); return; }
+  const opts = [
+    { emoji: '🛤️', name: 'Đường thường', desc: 'Đi tiếp như bình thường.', pick: () => resume(next) },
+    { emoji: '💀', name: 'Đường tinh anh', tag: 'Khó hơn', cls: 'elite', desc: 'Một nửa số quái thành tinh anh. Vàng ×2, rơi trang bị ×3, bùa thưởng thêm.', pick: () => { G.elitePath = true; resume(next); } },
+  ];
+  if (Math.random() < 0.6) opts.push({ emoji: '🏮', name: 'Thương nhân', tag: 'Tiêu vàng', desc: 'Ghé quán mua máu, bùa, nâng ★ kỹ năng bằng vàng nhặt trong trận.', pick: () => merchant(next) });
+  showChoice('Ngã rẽ', 'Chọn đường đi cho màn sau.', opts);
+}
+function merchant(next) {
+  const can = n => G.gold >= n, upk = G.skills.filter(k => !G.up[k]), bk = boonOffer()[0];
+  const items = [
+    { emoji: '🍵', name: 'Trà hồi phục', desc: 'Hồi 35 máu.', price: '40🪙', off: !can(40) || P.hp >= P.maxHp, pick: () => { G.gold -= 40; lifeGain(35); sfx('coin'); merchant(next); } },
+    { emoji: BOONS[bk].emoji, name: 'Bùa: ' + BOONS[bk].name, desc: BOONS[bk].desc, price: '70🪙', off: !can(70), pick: () => { G.gold -= 70; gainBoon(bk); merchant(next); } },
+  ];
+  if (upk.length) { const k = upk[0]; items.push({ emoji: SKILLS[k].emoji, name: '★ ' + SKILLS[k].name, desc: 'Nâng cấp ★: hồi chiêu nhanh hơn 30%, chiêu mạnh hơn 50%.', price: '150🪙', off: !can(150), pick: () => { G.gold -= 150; G.up[k] = true; sfx('boon'); merchant(next); } }); }
+  showChoice(`Thương nhân · bạn có 🪙 ${G.gold}`, 'Vàng tiêu ở đây sẽ không mang về sảnh.', items, { label: 'Đi tiếp ▶', pick: () => resume(next) });
+}
+
 function boot() {
   // Mở file:// với ảnh rời thì trình duyệt không cho đọc điểm ảnh -> chơi bình thường, chỉ không có kiếm nguyên tố.
   // Bản một-file (ảnh nhúng sẵn) và bản trên link claude.ai thì đọc được.
@@ -5285,9 +5501,13 @@ function boot() {
   resetGame();
   document.getElementById('loading').remove();
   if (location.hash === '#banner') exportBanner();
+  const sndToggle = () => { audioInit(); setSound(!AU.on); document.getElementById('lbSnd').textContent = AU.on ? '🔊' : '🔇'; };
+  document.getElementById('sndBtn').onclick = sndToggle; document.getElementById('lbSnd').onclick = sndToggle;
+  setSound(AU.on); document.getElementById('lbSnd').textContent = AU.on ? '🔊' : '🔇';
+  addEventListener('click', e => { if (e.target.closest && e.target.closest('button')) sfx('ui'); });
   showTitle();
   window.__dbg = { P, T, G, mons, orbs, combo, VAR, joy, ctrls, get boss() { return boss; }, startStage, resetGame, showPick, trySkill, tryFusion, spawnGroup, STAGES, dealDamage, SPR, CHARS,
-    setChar(k) { G.char = k; CH = CHARS[k]; resetGame(); }, fusionOf, vortices, zones, pets, shots, SKILLS, rollRun, bossKindAt, MON, react, buildPower, pressure, showTitle, fusionOf2: fusionOf, get SAVE() { return SAVE; }, set SAVE(v) { SAVE = v; }, showLobby, showEnd, makeItem, equipItem, pickups, eqStats, commitRun, refreshShop, newSave, renderLobby };
+    setChar(k) { G.char = k; CH = CHARS[k]; resetGame(); }, fusionOf, vortices, zones, pets, shots, SKILLS, rollRun, bossKindAt, MON, react, buildPower, pressure, showTitle, fusionOf2: fusionOf, AU, BOONS, gainBoon, afterStage, bn, sfx, get SAVE() { return SAVE; }, set SAVE(v) { SAVE = v; }, showLobby, showEnd, makeItem, equipItem, pickups, eqStats, commitRun, refreshShop, newSave, renderLobby };
   requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
 }
 // tải ảnh: nhân vật (IMG, dùng để tách lưỡi kiếm) + quái/boss (SPR). Bản một-file nhúng sẵn ảnh vào
