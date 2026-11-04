@@ -15,7 +15,8 @@ Bản thử đã đi qua bước 1 đến 4 trong mục "Thứ tự làm" của 
 quái và đợt, boss đổi địa hình, chọn skill). Ngoài brief còn có: 4 nhân vật chọn được, lướt chém,
 40 kỹ năng khác hẳn nhau (12 nguyên tố có phản ứng chéo), Hợp Kích 2 kỹ năng và Tam Hợp Kích 3 kỹ năng,
 nâng cấp ★, 4 boss, 20 màn, màn tiêu đề, **sảnh chính với 6 ô trang bị** (rơi từ quái / boss, mua, nâng cấp, đổi ngoại hình)
-và **lướt + đánh** (lướt hủy đòn, chuỗi lướt chém 3 lần). **Build càng mạnh, quái ra càng đông.** **Mỗi lần chơi lại
+và **lướt + đánh** (lướt hủy đòn, chuỗi lướt chém 3 lần). **Có âm thanh + nhạc**, **chọn bùa sau mỗi màn** và **ngã rẽ**
+(màn tinh anh / thương nhân). **Build càng mạnh, quái ra càng đông.** **Mỗi lần chơi lại
 một khác:** kỹ năng lần trước chưa gặp được ưu tiên, thứ tự boss bị xáo, bục và đội hình quái mỗi màn đổi.
 
 ## Giả thuyết
@@ -62,6 +63,41 @@ Ngón bấm lăn được giữa Chém/Nhảy/Lướt mà không cần nhấc ta
 ⚙ mở bảng chỉnh thông số (tốc độ chạy, lực nhảy, lực nhảy đôi, trọng lực, trượt tường, đạp tường,
 lướt, tốc độ chém, khựng hình, thời gian hồi chiêu, tốc độ quái, sát thương quái, cỡ nút). Giá trị được
 nhớ trong trình duyệt. Kéo "Sát thương quái" về 0 là bất tử để thử.
+
+## Âm thanh và nhạc
+
+Toàn bộ tiếng tạo bằng Web Audio ngay trong trình duyệt (không có file âm thanh): tiếng chém, trúng đòn, chí mạng, quái chết,
+nổ, sét, lướt, nhảy, tung chiêu, hợp kích, bị đánh, chặn đòn, nhặt vàng / đồ, phản ứng nguyên tố, chọn bùa, còi WARNING boss,
+tiếng gầm khi boss chết, nhạc thắng / thua, tiếng bấm nút. Nhạc nền tự soạn theo nhịp, 3 bài: **sảnh** (chậm, hợp âm êm),
+**trận** (128 nhịp/phút), **boss** (150 nhịp/phút, tối hơn). Nút 🔊 / 🔇 ở góc trên (trong trận) và trên thanh sảnh; lựa chọn được nhớ.
+Trình duyệt chỉ cho phát tiếng sau lần chạm đầu tiên, nên màn tiêu đề im lặng tới khi chạm.
+
+## Bùa và ngã rẽ (sau mỗi màn quái)
+
+Xong mỗi màn quái thì **chọn 1 trong 3 bùa**. Bùa cộng dồn tới hết trận, ưu tiên hiện bùa chưa có. Có 18 bùa:
+
+| Bùa | Tác dụng (mỗi tầng) |
+|---|---|
+| 🗡️ Lưỡi Sắc / 🎯 Mắt Ưng / ✋ Tay Nhanh | Công +8% / Chí mạng +5% / Tốc đánh +8% |
+| 👟 Chân Gió / 🛡️ Da Đồng / ❤️ Sinh Lực | Tốc chạy + lướt xa +8% / Giảm sát thương 8% / Máu tối đa +15 |
+| 🩸 Hút Hồn / 🧘 Tĩnh Tâm / 💢 Nộ Khí | Hút máu +1,5% / Giảm hồi chiêu 8% / Nạp hợp kích +15% |
+| 🔨 Trọng Kích | Sát thương chí mạng +25% |
+| 🔥 Lướt Lửa | Lướt để lại vệt lửa trên sàn |
+| ⚡ Lướt Sấm | Lướt chém gọi sét đánh con quái trúng đòn |
+| 🌙 Kiếm Vọng | 12% nhát chém bắn thêm kiếm khí |
+| 💰 Tham Vàng | Vàng +30% |
+| 🍖 Thực Hồn | Hạ quái 20% hồi 2 máu |
+| 💥 Xác Nổ | Quái chết 15% nổ lan |
+| 🔰 Hộ Thân Phù | Đầu mỗi màn có khiên chặn 1 đòn |
+| 🔋 Khởi Động | Đầu mỗi màn có sẵn 30% năng lượng hợp kích |
+
+Sau khi chọn bùa, nếu màn sau không phải boss thì 45% gặp **ngã rẽ**:
+- **Đường thường:** đi tiếp.
+- **Đường tinh anh:** một nửa số quái thành tinh anh; vàng ×2, rơi trang bị ×3; xong màn được chọn **thêm 1 bùa**.
+- **Thương nhân** (60% có mặt): tiêu vàng nhặt trong trận để mua trà hồi 35 máu (40), 1 bùa (70), nâng ★ một kỹ năng (150).
+  Vàng tiêu ở đây không mang về sảnh.
+
+Màn kết thúc liệt kê các bùa đã lấy.
 
 ## Sảnh chính và trang bị
 
