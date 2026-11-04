@@ -23,7 +23,7 @@ def main() -> None:
     if MARK not in html:
         sys.exit("Không tìm thấy chỗ chèn ảnh trong prototype.html")
     # khóa = đường dẫn tương đối trong sprites/ (vd "idle.png", "forest/bee-fly.png", "beast/fire.webp")
-    mime = {".png": "image/png", ".webp": "image/webp"}
+    mime = {".png": "image/png", ".webp": "image/webp", ".mp3": "audio/mpeg"}
     sprites = HERE / "sprites"
     data = {
         p.relative_to(sprites).as_posix(): f"data:{mime[p.suffix]};base64," + base64.b64encode(p.read_bytes()).decode("ascii")

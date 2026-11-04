@@ -66,7 +66,14 @@ nhớ trong trình duyệt. Kéo "Sát thương quái" về 0 là bất tử đ�
 
 ## Âm thanh và nhạc
 
-Toàn bộ tiếng tạo bằng Web Audio ngay trong trình duyệt (không có file âm thanh): tiếng chém, trúng đòn, chí mạng, quái chết,
+**Âm thanh thật:** tiếng trúng đòn, chí mạng, quái chết, nổ, lướt, bị đánh, chạm đất, nhặt vàng / đồ, bấm nút, chọn bùa,
+lên cấp, tiếng boss xuất hiện / chết, thua trận lấy từ các gói **Kenney** (Impact, Interface, RPG Audio..., CC0). Nhạc trận và
+nhạc boss là **"Battle Theme A" của cynicmusic** (CC0, boss phát nhanh hơn 7%). Cả hai lấy qua gói npm
+`@netforge/asset-library-files` 0.2.0, đã đổi sang MP3 mono (`sprites/audio/`, kèm `CC0-1.0.txt`, `NOTICE-audio.txt`) để chạy
+được trên iPhone. CC0 nên dùng thoải mái, kể cả game bán, không bắt buộc ghi tên.
+
+Tiếng chưa có file (vung kiếm, sét, tung chiêu, hợp kích, còi WARNING...) và nhạc sảnh vẫn tạo bằng Web Audio; khi không tải
+được file (mở `prototype.html` rời bằng `file://`) thì mọi tiếng quay về bản tạo bằng code. Tiếng tạo bằng code gồm: tiếng chém, trúng đòn, chí mạng, quái chết,
 nổ, sét, lướt, nhảy, tung chiêu, hợp kích, bị đánh, chặn đòn, nhặt vàng / đồ, phản ứng nguyên tố, chọn bùa, còi WARNING boss,
 tiếng gầm khi boss chết, nhạc thắng / thua, tiếng bấm nút. Nhạc nền tự soạn theo nhịp, 3 bài: **sảnh** (chậm, hợp âm êm),
 **trận** (128 nhịp/phút), **boss** (150 nhịp/phút, tối hơn). Nút 🔊 / 🔇 ở góc trên (trong trận) và trên thanh sảnh; lựa chọn được nhớ.
@@ -98,6 +105,30 @@ Sau khi chọn bùa, nếu màn sau không phải boss thì 45% gặp **ngã r�
   Vàng tiêu ở đây không mang về sảnh.
 
 Màn kết thúc liệt kê các bùa đã lấy.
+
+## Hướng dẫn lần đầu
+
+Lần đầu bấm **VÀO TRẬN** là vào màn tập 8 bước, có khung chữ trên cùng và vòng vàng nhấp nháy quanh nút cần bấm:
+chạy → nhảy đôi → bám / đạp tường → combo 3 nhát → lướt → lướt chém → tung chiêu (cho sẵn Hỏa Kiếm) → hạ hết bù nhìn.
+Bù nhìn không đánh lại, mình không mất máu. Nút **Bỏ qua ›** để vào trận ngay; nút 📘 ở sảnh để tập lại.
+
+## Chế độ Vô Tận
+
+Chọn **Thường / Vô Tận** cạnh nút VÀO TRẬN. Vô Tận: hạ trùm màn 20 không thắng mà sang **vòng sau** (chọn 1 bùa thưởng,
+hồi đầy máu, thứ tự boss xáo lại). Mỗi vòng: máu quái +80%, tốc độ +8%, thêm 12% quái tinh anh, máu boss +90%, đòn boss +25%.
+Đủ 3 kỹ năng thì phần thưởng boss là nâng ★, hết kỹ năng để nâng thì chọn bùa. Chết là hết, màn kết thúc ghi vòng / màn đã tới
+và kỷ lục xa nhất.
+
+## Cấp nhân vật, nhiệm vụ ngày, thành tựu, hào quang
+
+- **Cấp nhân vật:** hết trận được kinh nghiệm = quái × 2 + màn đã tới × 15 + boss × 60 (+200 nếu thắng). Mỗi cấp được 1
+  **điểm tiềm năng** (tab Nhân vật): Sức mạnh (Công +3%), Thể lực (Máu +8), Nhanh nhẹn (Tốc đánh +2%, tốc chạy +1,5%),
+  Tinh tường (Chí mạng +1%). Đặt lại điểm miễn phí. Mỗi nhân vật lên cấp riêng.
+- **Nhiệm vụ ngày** (tab Nhiệm vụ): 3 nhiệm vụ mỗi ngày (ví dụ hạ 120 quái, gây 25 phản ứng, lướt chém ×3 6 lần), cộng dồn
+  qua các trận trong ngày, nhận 150–200 vàng. Tab có chấm đỏ đếm số thưởng chưa nhận.
+- **Thành tựu:** 13 thành tựu (hạ 100 / 1000 quái, thắng, thắng với cả 4 nhân vật, 100 phản ứng, Tam Hợp, đồ Huyền thoại,
+  đồ +10, Vô Tận vòng 2, 10 bùa một trận, cấp 10...). Mỗi cái thưởng vàng và mở một **hào quang**.
+- **Hào quang:** chọn ở tab Nhân vật; quầng sáng + hạt bay lên dưới chân nhân vật trong trận và trong sảnh (có loại cầu vồng).
 
 ## Sảnh chính và trang bị
 
@@ -428,6 +459,8 @@ Chữ đuôi theo họ: Cửu Thiên Quyển (lốc), Phá Thiên Trảm (trăng
 `screenshot-lobby.png` (sảnh: tab Nhân vật, đủ 6 món), `screenshot-shop.png` (cửa hàng), `screenshot-gear-ingame.png`
 (vương miện, vòng ngọc bội, áo phủ màu trong trận), `screenshot-dashchain.png` (LƯỚT CHÉM ×3), `screenshot-dragon.png`
 (Phong Long), `screenshot-end-loot.png` (màn kết thúc có vàng + đồ nhặt được).
+`screenshot-tutorial.png` (hướng dẫn), `screenshot-quests.png` (nhiệm vụ + thành tựu), `screenshot-level.png` (cấp + tiềm năng +
+hào quang), `screenshot-endless.png` (Vô Tận vòng 2).
 
 Icon trang bị vẽ bằng code (`itemIcon`: kiếm, mũ, áo, găng, giày, ngọc bội theo màu hệ, viền theo độ hiếm).
 
