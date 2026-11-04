@@ -54,7 +54,12 @@ ICONS = {
     "quake": (43, "#1c0e04", "#c0803a", "#ffe8c8"),
     "spike": (3, "#0a1c04", "#7ad13a", "#f0ffd8"),
     "launch": (42, "#02182a", "#5ad0ff", "#f0fcff"),
+    "water": (24, "#021430", "#2a8aff", "#eaf6ff"),
+    "wood": (25, "#041a06", "#3fb04a", "#eaffe0"),
+    "earth": (32, "#1a1006", "#a87838", "#fff0d8"),
+    "metal": (16, "#241a02", "#d8b040", "#fffbe8"),
     # hợp kích; fu-pair để xám, game nhuộm 2 màu nguyên tố lúc vẽ
+    "fu-tri": (38, "#200820", "#ff7ab0", "#fff4c0"),
     "fu-pair": (45, "#1a1a1a", "#9a9a9a", "#ffffff"),
     "fu-tornado": (19, "#08142a", "#7fb8ff", "#ffffff"),
     "fu-crescent": (15, "#200a00", "#ffb35c", "#ffffff"),

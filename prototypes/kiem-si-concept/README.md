@@ -4,6 +4,8 @@
 
 # Kiếm Sĩ Bất Tận: bản thử
 
+![Kiếm Sĩ Bất Tận](banner.png)
+
 **Trạng thái:** đang thử (chưa chơi thử, chưa có kết luận)
 
 Bản thử dùng một lần rồi bỏ. Không đem code này vào game thật: nếu kết luận là
@@ -11,7 +13,8 @@ PROCEED thì viết lại từ đầu.
 
 Bản thử đã đi qua bước 1 đến 4 trong mục "Thứ tự làm" của `game-brief.md` (di chuyển và combo,
 quái và đợt, boss đổi địa hình, chọn skill). Ngoài brief còn có: 4 nhân vật chọn được, lướt chém,
-24 kỹ năng khác hẳn nhau, chiêu hợp kích giữa 2 kỹ năng, nâng cấp ★, 4 boss và 20 màn. **Mỗi lần chơi lại
+28 kỹ năng khác hẳn nhau (12 nguyên tố có phản ứng chéo), Hợp Kích 2 kỹ năng và Tam Hợp Kích 3 kỹ năng,
+nâng cấp ★, 4 boss, 20 màn và màn tiêu đề. **Build càng mạnh, quái ra càng đông.** **Mỗi lần chơi lại
 một khác:** kỹ năng lần trước chưa gặp được ưu tiên, thứ tự boss bị xáo, bục và đội hình quái mỗi màn đổi.
 
 ## Giả thuyết
@@ -75,8 +78,9 @@ choáng 0,5 giây. Ai cũng có.
 
 ## Vòng chơi: 20 màn
 
-1. **Chọn nhân vật**, rồi **chọn 1 kiếm nguyên tố khởi đầu** (3 thẻ trong 8 kiếm nguyên tố) → vào ô 1.
-2. **Màn 1–4: diệt quái.** **Màn 5: boss** → hồi đầy máu, **chọn thêm 1 kỹ năng** (3 thẻ trong 24) → ô 2.
+0. **Màn tiêu đề** (banner game) → chạm để bắt đầu.
+1. **Chọn nhân vật**, rồi **chọn 1 kiếm nguyên tố khởi đầu** (3 thẻ trong 12 kiếm nguyên tố) → vào ô 1.
+2. **Màn 1–4: diệt quái.** **Màn 5: boss** → hồi đầy máu, **chọn thêm 1 kỹ năng** (3 thẻ trong 28) → ô 2.
 3. **Màn 6–9: diệt quái.** **Màn 10: boss** → hồi đầy máu, chọn thêm 1 kỹ năng → ô 3.
 4. **Màn 11–14: diệt quái.** **Màn 15: boss** → hồi đầy máu, **nâng cấp ★ 1 kỹ năng đang có**
    (hồi chiêu nhanh hơn 30%, chiêu mạnh hơn 50%).
@@ -86,11 +90,26 @@ Lúc chọn kỹ năng, thẻ nào mở được Hợp Kích mới sẽ ghi "M�
 Hết máu thì thua. Thắng hay thua đều hiện nhân vật, điểm, số quái, thời gian, kỹ năng (có ★),
 thứ tự boss đã gặp, **kỷ lục** và nút **Chơi lại** (về màn chọn nhân vật).
 
+### Build càng mạnh, quái càng đông
+
+**Sức mạnh build** = số kỹ năng + số kỹ năng ★ + 1 nếu đủ 3 kỹ năng (Tam Hợp). Từ đó ra **áp lực** = 1 + 0,22 × (sức mạnh − 1),
+hiện trên thanh màn ("Áp lực ×1.4") và bảng giới thiệu màn:
+
+| Lúc | Sức mạnh | Áp lực | Màn 8 (gốc 14 quái) |
+|---|---|---|---|
+| 1 kỹ năng | 1 | ×1 | 14 quái, tối đa 7 con cùng lúc |
+| 2 kỹ năng | 2 | ×1,22 | ~17 quái, 9 con cùng lúc |
+| 3 kỹ năng | 4 | ×1,66 | ~23 quái, 13 con cùng lúc |
+| 3 kỹ năng + 1 ★ | 5 | ×1,88 | ~26 quái, 15 con cùng lúc |
+
+Mỗi bậc sức mạnh: thêm đợt quái chen vào giữa màn (lấy từ các đợt của màn đó), đợt thêm có 7% mỗi con thành tinh anh,
+thêm 2 con được đứng trên sân cùng lúc, quái ra dồn hơn, máu quái +6%, tốc độ +3%, máu boss +8%.
+
 ### Mỗi lần chơi một khác
 
 - **Kỹ năng xoay vòng:** game nhớ các thẻ kỹ năng đã hiện ở lần chơi trước (lưu trong trình duyệt). Lần sau thẻ chưa
   gặp được ưu tiên, có nhãn vàng **MỚI**. Trong cùng một lần chơi, thẻ đã hiện mà không chọn cũng không hiện lại
-  (trừ khi hết thẻ). Mỗi lần chơi hiện tối đa 9 thẻ trên 24, nên 2 lần liền không trùng thẻ nào.
+  (trừ khi hết thẻ). Mỗi lần chơi hiện tối đa 9 thẻ trên 28, nên 2 lần liền không trùng thẻ nào.
 - **Thứ tự 4 boss xáo ngẫu nhiên**, và không con nào đứng lại đúng màn của lần trước. Boss ra càng muộn càng trâu
   và đánh đau hơn, nên con nào làm trùm cuối cũng khó:
 
@@ -148,12 +167,12 @@ Boss nào cũng có bảng WARNING đỏ trước khi ra (trùm cuối ghi thêm
   gọi cột lửa thì **xếp lại bục**, dưới 60% máu thì **gầm hóa sàn thành dung nham**, gọi rồng con 3 lần
   (75%, 50%, 25% máu).
 
-## Kỹ năng: 24 kỹ năng, mỗi cái một cơ chế riêng
+## Kỹ năng: 28 kỹ năng, mỗi cái một cơ chế riêng
 
 Mỗi kỹ năng có thụ động (luôn chạy) + chiêu bấm trong ô (có hồi chiêu), một icon riêng không trùng. Tung chiêu thì có
 vòng sáng màu kỹ năng và tên chiêu bay lên trên đầu. Thẻ chọn ghi loại kỹ năng (Nguyên tố, Triệu hồi, Khống chế…).
 
-**8 kiếm nguyên tố** (kỹ năng khởi đầu; đổi màu lưỡi kiếm của Kiếm Sĩ, toả hạt hiệu ứng quanh vũ khí của mọi nhân vật):
+**12 kiếm nguyên tố** (kỹ năng khởi đầu; đổi màu lưỡi kiếm của Kiếm Sĩ, toả hạt hiệu ứng quanh vũ khí của mọi nhân vật):
 
 | Kỹ năng | Thụ động | Chiêu (hồi) |
 |---|---|---|
@@ -165,6 +184,28 @@ vòng sáng màu kỹ năng và tên chiêu bay lên trên đầu. Thẻ chọn 
 | ✨ Quang Kiếm | Chí mạng nổ chớp sáng lan sang quái quanh đó | Thánh Quang Trụ: cột sáng từ trời quét qua lại đấu trường 1,7 giây (10s) |
 | 🩸 Huyết Kiếm | Máu càng thấp đánh càng đau (tới +60%) | Huyết Cuồng: đổi 10 máu lấy 6 giây đánh nhanh và mạnh hơn 40%, chém trúng hút máu (14s) |
 | 🌑 Ám Kiếm | Chém sau lưng quái +60% và luôn chí mạng ("SAU LƯNG!") | Ảnh Sát: hiện sau lưng 5 con gần nhất, chém từng con (10s) |
+| 🌊 Thủy Kiếm | Chém làm quái **ướt** 3 giây và văng xa hơn | Thủy Long Ba: con sóng cuốn dọc sàn, dồn quái vào tường, làm ướt (9s) |
+| 🌿 Mộc Kiếm | Chém **gieo hạt**, 1,2 giây sau hạt nở: gây sát thương và trói chân | Đằng La Trận: dây leo trói mọi quái trên sàn quanh mình 2 giây (10s) |
+| ⛰️ Thổ Kiếm | Nhận ít hơn 25% sát thương, đòn chém làm choáng lâu hơn | Lạc Thạch: 3 tảng đá lăn dọc sàn nghiền quái (9s) |
+| 🔱 Kim Kiếm | Xuyên giáp (vỏ Ốc Giáp, kiếm đỡ Lãng Khách), +30% với tinh anh và boss | Kim Cang Kiếm: kiếm vàng khổng lồ cắm từ trời xuống, nổ sóng chấn (11s) |
+
+### Phản ứng nguyên tố (lối build)
+
+Trạng thái một nguyên tố để lại trên quái gặp nguyên tố khác thì nổ ra phản ứng (chữ phản ứng hiện trên đầu quái,
+mỗi con tối đa 1 lần / 0,8 giây, mỗi lần +4% năng lượng hợp kích). Đòn chém mang **mọi** kiếm nguyên tố đang có, chiêu
+và hợp kích mang nguyên tố của nó.
+
+| Trạng thái trên quái | Gặp | Phản ứng |
+|---|---|---|
+| Ướt (Thủy) | Lôi | **Điện Giật:** sét lan sang mọi quái quanh đó |
+| Ướt | Băng | **Đóng Băng:** đóng băng 1,6 giây |
+| Ướt | Hỏa | **Hơi Nước:** nổ hơi nước đẩy quái ra |
+| Ướt | Thổ | **Bùn Lầy:** chậm 3 giây, choáng |
+| Hạt / bị trói (Mộc) | Hỏa | **Bùng Cháy:** nổ lửa, cả đám bỏng 3 giây |
+| Độc ≥ 3 tầng | Hỏa | **Nổ Độc:** kích nổ độc theo số tầng, lan độc sang quái bên cạnh |
+
+Ví dụ build: Thủy + Lôi (đánh đâu giật đó), Mộc + Hỏa (trói rồi đốt), Độc + Hỏa (chồng độc rồi kích nổ), Thổ + Kim (trâu và
+xuyên giáp, đánh boss).
 
 **16 kỹ năng khác:**
 
@@ -196,7 +237,7 @@ Có từ 2 kỹ năng trở lên là mở ô **Hợp Kích** (ô vàng). Ô nạ
 mỗi con quái chết +3%. Đầy 100% thì ô sáng và có thể tung chiêu: tên chiêu hiện chữ vàng giữa màn hình.
 
 - **2 kiếm nguyên tố** → lốc xoáy 2 màu mang cả 2 nguyên tố, tên ghép từ 2 nguyên tố: **Lửa + Sét = Lôi Hỏa Long
-  Quyển**, Độc + Lửa = Độc Hỏa Long Quyển, Ám + Băng = Băng Ám Long Quyển… (28 cặp). Icon ô hợp kích nhuộm 2 màu.
+  Quyển**, Độc + Lửa = Độc Hỏa Long Quyển, Ám + Băng = Băng Ám Long Quyển, Thủy + Mộc = Thủy Mộc Long Quyển… (66 cặp). Icon ô hợp kích nhuộm 2 màu.
 - **Còn lại** theo họ của kỹ năng không phải nguyên tố, nhuộm màu kiếm nguyên tố đang có:
 
 | Họ | Kỹ năng | Hợp Kích |
@@ -209,6 +250,20 @@ mỗi con quái chết +3%. Đầy 100% thì ô sáng và có thể tung chiêu:
 | Ánh sáng | Khiên Thánh, Linh Tuyền, Thời Không | Quang Bạo: nổ ánh sáng lớn, hồi 20 máu, bất tử 2 giây |
 
 Có nhiều họ thì lấy họ đứng trên trong bảng.
+
+### Tam Hợp Kích (3 kỹ năng)
+
+Đủ 3 kỹ năng thì ô hợp kích thành **Tam Hợp Kích**: vòng năng lượng cầu vồng, chữ "TAM HỢP KÍCH" khi tung, mạnh hơn hẳn.
+Tam Hợp nào cũng kết thúc bằng **Thiên Phạt**: cột sáng màu nguyên tố giáng xuống 8 con quái gần nhất.
+
+| 3 kỹ năng | Tam Hợp | Ví dụ |
+|---|---|---|
+| 3 kiếm nguyên tố | 3 lốc xoáy 3 nguyên tố từ 3 phía hội tụ về giữa rồi nổ | Lôi Băng Hỏa Tam Nguyên Quyển |
+| 2 nguyên tố + 1 kỹ năng khác | Lốc xoáy 2 nguyên tố + chiêu họ của kỹ năng thứ ba | Lôi Thủy Vạn Kiếm Quy Tông |
+| 1 nguyên tố + 2 kỹ năng khác | Tung liền 2 chiêu họ của 2 kỹ năng | Kim Cửu Thiên Quyển |
+
+Chữ đuôi theo họ: Cửu Thiên Quyển (lốc), Phá Thiên Trảm (trăng), Vạn Kiếm Quy Tông (kiếm vũ), Thiên Hỏa Lạc Tinh
+(thiên thạch), Liệt Địa Long Chấn (chấn), Thánh Quang Thiên Bạo (ánh sáng).
 
 ## Trong bản thử
 
@@ -259,7 +314,7 @@ Có nhiều họ thì lấy họ đứng trên trong bảng.
 - **Samurai, Ninja, Võ Sĩ, Nhẫn Giả Bóng, Lãng Khách:** gói free shinobi của craftpix (`sprites/chars/`, `sprites/enemy/`).
   Nhẫn Giả Bóng (tím) và Lãng Khách (đỏ thẫm) là em đổi màu từ Ninja và Samurai.
 - **Icon kỹ năng và hợp kích:** gói "Free 50 Aeromancer Skills" của craftpix (50 icon tĩnh, không có hiệu ứng động).
-  Game dùng 31 icon khác nhau (24 kỹ năng + 7 hợp kích), em tô lại màu theo từng kỹ năng (`sprites/icons/`, WebP 96x96).
+  Game dùng 36 icon khác nhau (28 kỹ năng + 8 hợp kích), em tô lại màu theo từng kỹ năng (`sprites/icons/`, WebP 96x96).
   Hiệu ứng chiêu đều vẽ bằng code.
   Hai gói craftpix chỉ kèm link điều khoản (`License-craftpix.txt`, `License-aeromancer.txt` → craftpix.net/file-licenses).
   **Cần đọc điều khoản trước khi phát hành, nhất là phần đưa hình lên repo công khai.**
@@ -279,7 +334,13 @@ Có nhiều họ thì lấy họ đứng trên trong bảng.
 `screenshot-dslash.png` (Samurai lướt chém, màn 11), `screenshot-fusion.png` (Lôi Hỏa Long Quyển),
 `screenshot-lord.png` (Hắc Long Vương ra trận, Ninja có 3 kỹ năng, 1 kỹ năng ★),
 `screenshot-skills-1.png` / `-2` / `-3` (24 chiêu, mỗi ô một chiêu), `screenshot-pick.png` (lần chơi thứ 2: thẻ MỚI),
-`screenshot-fusion-pair.png` (Độc Hỏa Long Quyển), `screenshot-boss-shuffle.png` (Hắc Long Vương ra ở màn 5).
+`screenshot-fusion-pair.png` (Độc Hỏa Long Quyển), `screenshot-boss-shuffle.png` (Hắc Long Vương ra ở màn 5),
+`screenshot-title.png` (màn tiêu đề), `screenshot-elements.png` (Kim Cang Kiếm), `screenshot-reaction.png` (Mộc + Hỏa: Bùng Cháy),
+`screenshot-tamhop.png` (Lôi Thủy Vạn Kiếm Quy Tông), `screenshot-pressure.png` (màn 8 áp lực ×1,9: 27 quái).
+
+**Banner:** `banner.png` (1280x640, cỡ ảnh xem trước của GitHub) vẽ bằng chính sprite trong game: 4 nhân vật với quầng nguyên tố,
+Hắc Long Vương, trăng, tên game. Vẽ lại bằng cách mở `kiem-si-bat-tan.html#banner` rồi chụp khung 1280x640 (hàm `drawTitleArt`,
+dùng chung với màn tiêu đề).
 
 ## Kết luận
 
