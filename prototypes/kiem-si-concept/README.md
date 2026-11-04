@@ -13,8 +13,9 @@ PROCEED thì viết lại từ đầu.
 
 Bản thử đã đi qua bước 1 đến 4 trong mục "Thứ tự làm" của `game-brief.md` (di chuyển và combo,
 quái và đợt, boss đổi địa hình, chọn skill). Ngoài brief còn có: 4 nhân vật chọn được, lướt chém,
-28 kỹ năng khác hẳn nhau (12 nguyên tố có phản ứng chéo), Hợp Kích 2 kỹ năng và Tam Hợp Kích 3 kỹ năng,
-nâng cấp ★, 4 boss, 20 màn và màn tiêu đề. **Build càng mạnh, quái ra càng đông.** **Mỗi lần chơi lại
+40 kỹ năng khác hẳn nhau (12 nguyên tố có phản ứng chéo), Hợp Kích 2 kỹ năng và Tam Hợp Kích 3 kỹ năng,
+nâng cấp ★, 4 boss, 20 màn, màn tiêu đề, **sảnh chính với 6 ô trang bị** (rơi từ quái / boss, mua, nâng cấp, đổi ngoại hình)
+và **lướt + đánh** (lướt hủy đòn, chuỗi lướt chém 3 lần). **Build càng mạnh, quái ra càng đông.** **Mỗi lần chơi lại
 một khác:** kỹ năng lần trước chưa gặp được ưu tiên, thứ tự boss bị xáo, bục và đội hình quái mỗi màn đổi.
 
 ## Giả thuyết
@@ -46,7 +47,8 @@ Chém/Nhảy/Lướt, 3 ô kỹ năng và ô Hợp Kích mà không bấm nhầm
 | Rơi xuống khỏi bục | kéo cần xuống + Nhảy | ↓/S + Nhảy |
 | Chém (bấm liên tục = 3 nhát) | Chém (nút to) | X, J |
 | Lướt | Lướt | C, L, Shift |
-| **Lướt chém** | bấm Chém trong lúc lướt | |
+| **Lướt chém** | bấm Chém trong lúc lướt; bấm Chém tiếp lúc gần hết đà để nối, tối đa 3 lần | |
+| **Lướt hủy đòn** | đang chém bấm Lướt: hủy đòn để né, lướt xong chém tiếp vẫn giữ nhịp combo | |
 | Chiêu ô 1 / 2 / 3 | 3 ô kỹ năng xếp vòng cung quanh nút Chém | 1 / 2 / 3 (hoặc U / I / O) |
 | **Hợp Kích** | ô vàng ở vòng ngoài (sáng lên khi đầy năng lượng) | 4, F, P |
 | Bám tường | đang rơi, giữ cần hướng vào tường | |
@@ -61,7 +63,37 @@ Ngón bấm lăn được giữa Chém/Nhảy/Lướt mà không cần nhấc ta
 lướt, tốc độ chém, khựng hình, thời gian hồi chiêu, tốc độ quái, sát thương quái, cỡ nút). Giá trị được
 nhớ trong trình duyệt. Kéo "Sát thương quái" về 0 là bất tử để thử.
 
-## Nhân vật (chọn đầu trận)
+## Sảnh chính và trang bị
+
+Chạm màn tiêu đề là vào **sảnh chính** với 3 tab và nút **VÀO TRẬN**:
+
+- **Nhân vật:** cột trái chọn 1 trong 4 nhân vật; giữa là nhân vật đứng thở với trang bị đang mặc, 6 ô trang bị xếp
+  hai bên; phải là bảng chỉ số (gốc + phần cộng từ trang bị). Chạm một ô để xem món đang mặc, **nâng cấp** (+1 tới +10,
+  mỗi cấp +12% chỉ số), **tháo**, hoặc **mặc** món khác cùng ô trong túi.
+- **Túi đồ:** mọi trang bị, mặc cho nhân vật đang chọn hoặc **bán** lấy vàng (món đang mặc không bán được).
+- **Cửa hàng:** 6 món (mỗi ô 1 món, độ hiếm ngẫu nhiên), mua bằng vàng; mua món cho ô đang trống thì mặc luôn.
+  Làm mới tốn 30 vàng; chơi xong mỗi trận cửa hàng tự đổi hàng.
+
+| Ô | Chỉ số chính | Ngoại hình trên nhân vật |
+|---|---|---|
+| Vũ khí | Công % | Đốm sáng màu vũ khí quanh lưỡi kiếm khi đứng / chém (từ độ Hiếm) |
+| Mũ | Máu | Sừng (Thường, Hiếm) hoặc vương miện (Sử thi, Huyền thoại) lơ lửng trên đầu |
+| Áo giáp | Giảm sát thương % | Phủ màu áo lên cả thân nhân vật |
+| Găng | Tốc đánh % | Tia lửa màu găng khi chém trúng |
+| Giày | Tốc chạy % | Vệt sáng màu giày dưới chân khi chạy / lướt |
+| Ngọc bội | Giảm hồi chiêu % | Vòng hào quang có 4 hạt xoay dưới chân |
+
+**Độ hiếm:** Thường (xám, ×1), Hiếm (xanh, ×1,6, +1 chỉ số phụ), Sử thi (tím, ×2,4, +2), Huyền thoại (cam, ×3,5, +3).
+Chỉ số phụ lấy ngẫu nhiên trong: Công, Máu, Chí mạng, Tốc đánh, Tốc chạy, Giảm sát thương, Lướt xa, Hút máu, Giảm hồi chiêu,
+Nạp hợp kích. Mỗi món mang một **hệ màu** (Hỏa Viêm, Lôi Thần, Băng Tinh, Mộc Linh, Kim Long, Huyết Ma, Ám Dạ, Bạch Ngọc)
+quyết định màu ngoại hình và tên món.
+
+**Có đồ từ đâu:** quái rơi vàng (tinh anh rơi nhiều hơn, 15% rơi trang bị), boss rơi 80–320 vàng và chắc chắn 1 trang bị
+(boss sau rơi đồ hiếm hơn). Vàng và đồ hút về người chơi, tên món hiện màu theo độ hiếm. Hết trận (thắng hay thua) thì
+vàng + đồ nhặt được vào túi. Lần đầu chơi có sẵn 300 vàng và 1 thanh kiếm Thường. Mỗi nhân vật mặc đồ riêng; một món chỉ
+mặc được cho một người. Dữ liệu lưu trong trình duyệt (`ksbt-save`).
+
+## Nhân vật (chọn ở sảnh)
 
 | Nhân vật | Lối đánh | Khác biệt |
 |---|---|---|
@@ -74,13 +106,15 @@ Kỹ năng và hợp kích dùng chung cho cả 4. Samurai / Ninja / Võ Sĩ có
 (lửa, tia điện, băng) chứ không tô màu lưỡi kiếm như Kiếm Sĩ.
 
 **Lướt chém:** bấm Chém trong lúc lướt là phóng tới chém 3 dòng sát thương, để lại bóng mờ, làm quái
-choáng 0,5 giây. Ai cũng có.
+choáng 0,5 giây. Bấm Chém tiếp lúc gần hết đà là nối lướt chém (đổi hướng được), tối đa 3 lần; lần 3 là đòn kết
+("LƯỚT CHÉM ×3!", 4 dòng, hất văng). **Lướt hủy đòn:** đang chém bấm Lướt là bỏ đòn để lướt né, lướt xong bấm Chém thì
+ra nhát tiếp theo của combo chứ không quay lại nhát 1. Ai cũng có.
 
 ## Vòng chơi: 20 màn
 
-0. **Màn tiêu đề** (banner game) → chạm để bắt đầu.
-1. **Chọn nhân vật**, rồi **chọn 1 kiếm nguyên tố khởi đầu** (3 thẻ trong 12 kiếm nguyên tố) → vào ô 1.
-2. **Màn 1–4: diệt quái.** **Màn 5: boss** → hồi đầy máu, **chọn thêm 1 kỹ năng** (3 thẻ trong 28) → ô 2.
+0. **Màn tiêu đề** (banner game) → chạm → **sảnh chính** (chọn nhân vật, mặc đồ) → **VÀO TRẬN**.
+1. **Chọn 1 kiếm nguyên tố khởi đầu** (3 thẻ trong 12 kiếm nguyên tố) → vào ô 1.
+2. **Màn 1–4: diệt quái.** **Màn 5: boss** → hồi đầy máu, **chọn thêm 1 kỹ năng** (3 thẻ trong 40) → ô 2.
 3. **Màn 6–9: diệt quái.** **Màn 10: boss** → hồi đầy máu, chọn thêm 1 kỹ năng → ô 3.
 4. **Màn 11–14: diệt quái.** **Màn 15: boss** → hồi đầy máu, **nâng cấp ★ 1 kỹ năng đang có**
    (hồi chiêu nhanh hơn 30%, chiêu mạnh hơn 50%).
@@ -88,7 +122,7 @@ choáng 0,5 giây. Ai cũng có.
 
 Lúc chọn kỹ năng, thẻ nào mở được Hợp Kích mới sẽ ghi "Mở hợp kích: …". Qua mỗi màn quái được hồi 25 máu.
 Hết máu thì thua. Thắng hay thua đều hiện nhân vật, điểm, số quái, thời gian, kỹ năng (có ★),
-thứ tự boss đã gặp, **kỷ lục** và nút **Chơi lại** (về màn chọn nhân vật).
+thứ tự boss đã gặp, vàng và trang bị nhặt được, **kỷ lục**, nút **Về sảnh** và **Chơi lại** (cùng nhân vật).
 
 ### Build càng mạnh, quái càng đông
 
@@ -109,7 +143,7 @@ thêm 2 con được đứng trên sân cùng lúc, quái ra dồn hơn, máu qu
 
 - **Kỹ năng xoay vòng:** game nhớ các thẻ kỹ năng đã hiện ở lần chơi trước (lưu trong trình duyệt). Lần sau thẻ chưa
   gặp được ưu tiên, có nhãn vàng **MỚI**. Trong cùng một lần chơi, thẻ đã hiện mà không chọn cũng không hiện lại
-  (trừ khi hết thẻ). Mỗi lần chơi hiện tối đa 9 thẻ trên 28, nên 2 lần liền không trùng thẻ nào.
+  (trừ khi hết thẻ). Mỗi lần chơi hiện tối đa 9 thẻ trên 40, nên 4 lần liền không trùng thẻ nào.
 - **Thứ tự 4 boss xáo ngẫu nhiên**, và không con nào đứng lại đúng màn của lần trước. Boss ra càng muộn càng trâu
   và đánh đau hơn, nên con nào làm trùm cuối cũng khó:
 
@@ -167,7 +201,7 @@ Boss nào cũng có bảng WARNING đỏ trước khi ra (trùm cuối ghi thêm
   gọi cột lửa thì **xếp lại bục**, dưới 60% máu thì **gầm hóa sàn thành dung nham**, gọi rồng con 3 lần
   (75%, 50%, 25% máu).
 
-## Kỹ năng: 28 kỹ năng, mỗi cái một cơ chế riêng
+## Kỹ năng: 40 kỹ năng, mỗi cái một cơ chế riêng
 
 Mỗi kỹ năng có thụ động (luôn chạy) + chiêu bấm trong ô (có hồi chiêu), một icon riêng không trùng. Tung chiêu thì có
 vòng sáng màu kỹ năng và tên chiêu bay lên trên đầu. Thẻ chọn ghi loại kỹ năng (Nguyên tố, Triệu hồi, Khống chế…).
@@ -207,7 +241,7 @@ và hợp kích mang nguyên tố của nó.
 Ví dụ build: Thủy + Lôi (đánh đâu giật đó), Mộc + Hỏa (trói rồi đốt), Độc + Hỏa (chồng độc rồi kích nổ), Thổ + Kim (trâu và
 xuyên giáp, đánh boss).
 
-**16 kỹ năng khác:**
+**28 kỹ năng khác:**
 
 | Kỹ năng | Loại | Thụ động | Chiêu (hồi) |
 |---|---|---|---|
@@ -228,8 +262,21 @@ xuyên giáp, đánh boss).
 | 🌵 Gai Đất | Diện rộng | Quái chết thì đất mọc gai đâm con bên cạnh | Địa Thứ: hàng gai lan ra phía trước (8s) |
 | 🐉 Thăng Long | Khống chế | Nhát 3 combo hất quái lên trời, rơi đập đất mất thêm máu | Thăng Long Quyển: cột gió hất tung quái rồi quật xuống (9s) |
 
-So với bản trước: Hỏa Kiếm đổi chiêu từ "nổ vòng lửa" (giống Băng Hoa) sang lao xuyên quái; Thiên Lôi (trùng với
-Lôi Kiếm) bị thay bằng Hộ Thể Cầu; thêm 13 kỹ năng mới.
+| ⛓️ Xích Hồn | Khống chế | Cứ 6 nhát trúng thì quăng xích kéo 1 con về sát mình | Xích Hồn Tỏa: móc 5 con kéo về, choáng 1 giây (9s) |
+| 💨 Tật Phong | Cường hóa | Chạy nhanh hơn 15% | Tật Phong Bộ: 5 giây chạy +50%, đánh +30%, có bóng mờ, lướt để lại vệt gió chém (12s) |
+| 💀 Đoạt Mệnh | Cận chiến | Chém quái dưới 30% máu luôn chí mạng | Đoạt Mệnh Trảm: lao tới con yếu nhất, quái thường dưới 35% máu chết ngay (10s) |
+| 🌠 Bạch Hồng Kiếm | Phóng chiêu | Đòn chí mạng bắn kiếm khí nảy qua 2 con | Bạch Hồng Quán Nhật: kiếm khí nảy qua 8 con (8s) |
+| 💥 Bạo Kích | Cường hóa | Chí mạng +12% | Cuồng Bạo: 6 nhát tới chắc chắn chí mạng, mạnh hơn 50% (11s) |
+| 🗼 Phong Trụ | Triệu hồi | Cứ 18 giây tự dựng 1 trụ gió nhỏ bắn quái 4 giây | Phong Trụ Trận: trụ gió bắn liên tục 7 giây (12s) |
+| 🐲 Phong Long | Triệu hồi | Cứ hạ 25 quái thì 1 rồng gió bay quét ngang sân | Phong Long Quá Hải: rồng gió quét ngang đấu trường, hất tung quái (14s) |
+| 🔯 Ấn Ký | Diện rộng | Mỗi nhát in 1 ấn (chấm tím trên đầu quái), đủ 5 ấn thì nổ | Ấn Bạo: in đủ 5 ấn lên mọi quái quanh mình rồi nổ cùng lúc (10s) |
+| 🕸️ Thiên La Võng | Khống chế | Chém trúng quái bay thì nó rơi xuống, choáng 1,2 giây | Thiên La Địa Võng: tung lưới trói quái 2,5 giây, kéo quái bay xuống (10s) |
+| 🤺 Phản Kích | Phòng thủ | Bị trúng đòn thì tự chém trả một vòng | Thế Thủ: 1 giây thủ thế, đòn nào trúng cũng bị chặn và phản lại một nhát cực mạnh (8s) |
+| 🌬️ Phong Bích | Phòng thủ | Đạn quái bay tới gần có 1/4 cơ hội bị thổi tan | Phong Bích: tường gió 4 giây chặn đạn, đẩy lùi và cứa quái (12s) |
+| 🔨 Phá Giáp | Khống chế | Chém làm quái vỡ giáp 3 giây (+15% sát thương nhận) | Chấn Hống: mọi quái quanh mình vỡ giáp nặng 6 giây (+40%) và choáng (12s) |
+
+Họ hợp kích của 12 kỹ năng mới: Xích Hồn, Tật Phong → lốc; Đoạt Mệnh, Bạch Hồng Kiếm, Bạo Kích → trăng; Phong Trụ,
+Phong Long → kiếm vũ; Ấn Ký → thiên thạch; Thiên La Võng → chấn; Phản Kích, Phong Bích, Phá Giáp → ánh sáng.
 
 ### Hợp Kích (chiêu phối hợp 2 kỹ năng)
 
@@ -314,7 +361,7 @@ Chữ đuôi theo họ: Cửu Thiên Quyển (lốc), Phá Thiên Trảm (trăng
 - **Samurai, Ninja, Võ Sĩ, Nhẫn Giả Bóng, Lãng Khách:** gói free shinobi của craftpix (`sprites/chars/`, `sprites/enemy/`).
   Nhẫn Giả Bóng (tím) và Lãng Khách (đỏ thẫm) là em đổi màu từ Ninja và Samurai.
 - **Icon kỹ năng và hợp kích:** gói "Free 50 Aeromancer Skills" của craftpix (50 icon tĩnh, không có hiệu ứng động).
-  Game dùng 36 icon khác nhau (28 kỹ năng + 8 hợp kích), em tô lại màu theo từng kỹ năng (`sprites/icons/`, WebP 96x96).
+  Game dùng 48 icon khác nhau (40 kỹ năng + 8 hợp kích), em tô lại màu theo từng kỹ năng (`sprites/icons/`, WebP 96x96).
   Hiệu ứng chiêu đều vẽ bằng code.
   Hai gói craftpix chỉ kèm link điều khoản (`License-craftpix.txt`, `License-aeromancer.txt` → craftpix.net/file-licenses).
   **Cần đọc điều khoản trước khi phát hành, nhất là phần đưa hình lên repo công khai.**
@@ -336,7 +383,12 @@ Chữ đuôi theo họ: Cửu Thiên Quyển (lốc), Phá Thiên Trảm (trăng
 `screenshot-skills-1.png` / `-2` / `-3` (24 chiêu, mỗi ô một chiêu), `screenshot-pick.png` (lần chơi thứ 2: thẻ MỚI),
 `screenshot-fusion-pair.png` (Độc Hỏa Long Quyển), `screenshot-boss-shuffle.png` (Hắc Long Vương ra ở màn 5),
 `screenshot-title.png` (màn tiêu đề), `screenshot-elements.png` (Kim Cang Kiếm), `screenshot-reaction.png` (Mộc + Hỏa: Bùng Cháy),
-`screenshot-tamhop.png` (Lôi Thủy Vạn Kiếm Quy Tông), `screenshot-pressure.png` (màn 8 áp lực ×1,9: 27 quái).
+`screenshot-tamhop.png` (Lôi Thủy Vạn Kiếm Quy Tông), `screenshot-pressure.png` (màn 8 áp lực ×1,9: 27 quái),
+`screenshot-lobby.png` (sảnh: tab Nhân vật, đủ 6 món), `screenshot-shop.png` (cửa hàng), `screenshot-gear-ingame.png`
+(vương miện, vòng ngọc bội, áo phủ màu trong trận), `screenshot-dashchain.png` (LƯỚT CHÉM ×3), `screenshot-dragon.png`
+(Phong Long), `screenshot-end-loot.png` (màn kết thúc có vàng + đồ nhặt được).
+
+Icon trang bị vẽ bằng code (`itemIcon`: kiếm, mũ, áo, găng, giày, ngọc bội theo màu hệ, viền theo độ hiếm).
 
 **Banner:** `banner.png` (1280x640, cỡ ảnh xem trước của GitHub) vẽ bằng chính sprite trong game: 4 nhân vật với quầng nguyên tố,
 Hắc Long Vương, trăng, tên game. Vẽ lại bằng cách mở `kiem-si-bat-tan.html#banner` rồi chụp khung 1280x640 (hàm `drawTitleArt`,
