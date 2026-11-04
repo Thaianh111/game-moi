@@ -354,6 +354,11 @@ Chữ đuôi theo họ: Cửu Thiên Quyển (lốc), Phá Thiên Trảm (trăng
 - Xoay vòng và thứ tự boss lưu trong `localStorage` (`ksbt-seen`, `ksbt-boss`). Trình duyệt chặn lưu (chế độ ẩn danh…)
   thì vẫn chơi được, chỉ là mỗi lần đều bốc ngẫu nhiên.
 
+- **Chống đứng hình:** vòng lặp hẹn khung hình sau trước rồi mới cập nhật / vẽ; lỗi ở cập nhật hay vẽ chỉ được ghi vào
+  `window.__loopErrs` rồi game chạy tiếp. Mọi lệnh vẽ tròn / elip / gradient tròn tự kẹp bán kính âm về 0. (Lỗi cũ: vệt lửa
+  Hỏa Long Xung tính ra bán kính âm ở khung cuối, vòng lặp chết, game đứng hình.) Kiểm tra bằng bot chơi ngẫu nhiên
+  120 màn với bộ kỹ năng ngẫu nhiên: 0 lỗi.
+
 ## Hình
 
 - **Kiếm Sĩ:** bộ "2D Sword Character PC" của EBros Entertainment (`sprites/*.png`). Anh Thái Anh đã

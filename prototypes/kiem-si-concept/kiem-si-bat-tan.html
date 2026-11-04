@@ -2498,7 +2498,7 @@ function updateZones(dt) {
     switch (z.kind) {
       case 'flame':
         z.tick -= dt;
-        if (Math.random() < dt * 60) fx.push({ type: 'fire', x: rnd(z.x0, z.x1), y: z.y - rnd(0, 6), vx: rnd(-10, 10), vy: rnd(-120, -50), r: rnd(2.5, 5) * Math.min(1, z.life), life: rnd(0.25, 0.45), max: 0.45 });
+        if (Math.random() < dt * 60) fx.push({ type: 'fire', x: rnd(z.x0, z.x1), y: z.y - rnd(0, 6), vx: rnd(-10, 10), vy: rnd(-120, -50), r: rnd(2.5, 5) * clamp(z.life, 0.2, 1), life: rnd(0.25, 0.45), max: 0.45 });
         if (z.tick <= 0) { z.tick = 0.3; zoneHits([z.x0, z.x1, z.y - 34, z.y + 4], (at, t) => { if (!t.burn) applyHit(at, { dmg: [300, 420], lines: 1, mul: um('fire'), stun: 0.05, style: 'fire' }, 1, false); elemHit(t, 'fire'); }); }
         break;
       case 'flask': {
@@ -3514,17 +3514,40 @@ function step(dt) {
   updateGame(dt);
   for (let i = timers.length - 1; i >= 0; i--) { const t = timers[i]; t.d -= dt; if (t.d <= 0) { timers.splice(i, 1); t.fn(); } }
 }
+// Vòng lặp không bao giờ chết: hẹn khung hình sau trước, lỗi ở cập nhật / vẽ chỉ ghi lại rồi chơi tiếp
+// (trước đây một lỗi vẽ là vòng lặp dừng hẳn -> game đứng hình).
+var loopErrs = window.__loopErrs = [];
+function loopError(where, e) {
+  if (loopErrs.length < 50) loopErrs.push(where + ': ' + (e && e.message));
+  if (loopErrs.length <= 5) console.error('[loop] ' + where, e);
+}
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
-  readInput();
-  updateFx(dt);
-  if (hitstop > 0) hitstop -= dt;
-  else { acc += dt; while (acc >= STEP) { step(STEP); acc -= STEP; } }
-  render(now / 1000);
   requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
+  try { readInput(); updateFx(dt); } catch (e) { loopError('fx', e); }
+  if (hitstop > 0) hitstop -= dt;
+  else {
+    acc += dt;
+    let n = 0;
+    while (acc >= STEP && n++ < 8) { try { step(STEP); } catch (e) { loopError('step', e); } acc -= STEP; }
+    if (acc > STEP * 8) acc = 0;   // máy quá chậm: bỏ bớt, không dồn bước
+  }
+  try { render(now / 1000); }
+  catch (e) {
+    loopError('render', e);
+    if (ctx.reset) ctx.reset(); else { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+  }
 }
 
 // ============ Màn hình ============
+(function guardCanvas() {
+  const C = CanvasRenderingContext2D.prototype, nn = v => (v > 0 ? v : 0);
+  const arc = C.arc, ell = C.ellipse, rg = C.createRadialGradient, rr2 = C.roundRect;
+  C.arc = function (x, y, r, a0, a1, ccw) { return arc.call(this, x, y, nn(r), a0, a1, ccw); };
+  C.ellipse = function (x, y, rx, ry, rot, a0, a1, ccw) { return ell.call(this, x, y, nn(rx), nn(ry), rot, a0, a1, ccw); };
+  C.createRadialGradient = function (x0, y0, r0, x1, y1, r1) { return rg.call(this, x0, y0, nn(r0), x1, y1, nn(r1)); };
+  if (rr2) C.roundRect = function (x, y, w, h, r) { return rr2.call(this, x, y, w, h, Array.isArray(r) ? r.map(nn) : nn(r)); };
+})();
 const ctx = cv.getContext('2d');
 let cssW = 0, cssH = 0, dpr = 1, scale = 1, offX = 0, offY = 0, safeL = 0, safeR = 0;
 const bg = document.createElement('canvas');
@@ -4913,10 +4936,12 @@ function drawTitleArt(g, W, H, time) {
 const titleEl = document.getElementById('title'), titleCv = document.getElementById('titleCv');
 function titleLoop(now) {
   if (titleEl.hidden) return;
+  try {
   const d = Math.min(2, window.devicePixelRatio || 1), w = innerWidth, h = innerHeight;
   if (titleCv.width !== Math.round(w * d) || titleCv.height !== Math.round(h * d)) { titleCv.width = Math.round(w * d); titleCv.height = Math.round(h * d); }
   const g = titleCv.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0);
   drawTitleArt(g, w, h, now / 1000);
+  } catch (e) { loopError('title', e); }
   requestAnimationFrame(titleLoop);
 }
 function showTitle() {
@@ -5215,7 +5240,7 @@ function renderLobby() {
 function lobbyLoop(now) {
   if (lobbyEl.hidden) return;
   const c = document.getElementById('lbPreview');
-  if (c) {
+  if (c) try {
     const g = c.getContext('2d'), time = now / 1000, ch = CHARS[SAVE.char], L = lookOf(SAVE.char);
     g.clearRect(0, 0, c.width, c.height);
     const bgG = g.createRadialGradient(220, 250, 20, 220, 250, 220); bgG.addColorStop(0, 'rgba(255,214,140,.22)'); bgG.addColorStop(1, 'rgba(255,214,140,0)');
@@ -5237,7 +5262,7 @@ function lobbyLoop(now) {
     if (L.helm) drawHelm(g, 220, 340 - (ch.kind === 'ebros' ? 58 / S : 54 / ch.scale) * sc, L.helm.col, L.helm.rar, time, 2.4);
     if (L.boots) { g.save(); g.globalCompositeOperation = 'lighter'; for (let i = 0; i < 6; i++) { const ph = (time * 0.8 + i / 6) % 1; g.globalAlpha = 1 - ph; g.fillStyle = L.boots.col; g.beginPath(); g.arc(200 + i * 8, 338 - ph * 30, 3, 0, 6.29); g.fill(); } g.restore(); }
     if (L.glove) { g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.6 + Math.sin(time * 6) * 0.2; const gg = g.createRadialGradient(250, 270, 1, 250, 270, 18); gg.addColorStop(0, L.glove.col); gg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gg; g.beginPath(); g.arc(250, 270, 18, 0, 6.29); g.fill(); g.restore(); }
-  }
+  } catch (e) { loopError('lobby', e); }
   requestAnimationFrame(lobbyLoop);
 }
 for (const b of document.querySelectorAll('#lobby .tabs button')) b.onclick = () => { lbTab = b.dataset.tab; lbSlot = null; renderLobby(); };
