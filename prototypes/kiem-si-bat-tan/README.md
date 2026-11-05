@@ -32,7 +32,7 @@ Chém/Nhảy/Lướt, 3 ô kỹ năng và ô Hợp Kích mà không bấm nhầm
 
 ## Cách chạy
 
-- **Link chơi cho người test (khuyên dùng):** https://thaianh111.github.io/game-moi/prototypes/kiem-si-concept/
+- **Link chơi cho người test (khuyên dùng):** https://thaianh111.github.io/game-moi/prototypes/kiem-si-bat-tan/
   (tự chuyển tới `prototype.html`). Bản này tải từng phần: nhân vật, quái, icon xong là vào game ngay (có thanh %), ảnh
   boss (~2 MB) tải ngầm sau. Lần sau mở lại gần như tức thì và **chơi được khi không có mạng** (service worker `sw.js`).
 - **Cài như app (PWA):** Chrome Android: menu ⋮ → "Cài đặt ứng dụng" (hoặc nút 📲 trong ⚙ Cài đặt ở sảnh); iPhone Safari:

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Người giữ biển – Cảnh thử</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1b2236; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #fff; }
+  canvas { display: block; touch-action: none; }
+  #hud { position: fixed; top: 12px; left: 12px; pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,.55); }
+  #hud h1 { margin: 0; font-size: 20px; letter-spacing: .5px; }
+  #hud p { margin: 2px 0 0; font-size: 13px; opacity: .85; }
+  #bar { position: fixed; right: 10px; top: 46px; display: flex; flex-direction: column; gap: 5px; background: rgba(10,16,30,.4); padding: 5px; border-radius: 12px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  #bar button { border: 0; border-radius: 9px; width: 40px; height: 36px; font-size: 18px; color: #fff; background: rgba(255,255,255,.12); cursor: pointer; }
+  #joy { position: fixed; left: 22px; bottom: 26px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.3); touch-action: none; z-index: 3; }
+  #joy i { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: rgba(255,255,255,.55); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  #jump { position: fixed; right: 26px; bottom: 34px; width: 84px; height: 84px; border-radius: 50%; border: 2px solid rgba(255,255,255,.4); background: rgba(255,190,110,.75); color: #2a1a08; font-size: 15px; font-weight: 700; touch-action: none; z-index: 3; }
+  #jump:active { transform: scale(.94); }
+  #toast { position: fixed; left: 50%; top: 38%; transform: translate(-50%,-50%); font-size: 22px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,.6); opacity: 0; transition: opacity .3s; pointer-events: none; text-align: center; }
+  #hint { position: fixed; left: 50%; bottom: 168px; transform: translateX(-50%); font-size: 13px; background: rgba(10,16,30,.5); padding: 6px 12px; border-radius: 10px; transition: opacity .8s; pointer-events: none; max-width: 80vw; text-align: center; }
+  #bar button.on { background: rgba(255,190,110,.85); color: #2a1a08; font-weight: 600; }
+  #credit { position: fixed; right: 10px; top: 12px; font-size: 11px; opacity: .7; text-shadow: 0 1px 3px rgba(0,0,0,.6); pointer-events: none; text-align: right; }
+  #load { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1b2236; transition: opacity .6s; z-index: 5; }
+  #load .t { font-size: 22px; margin-bottom: 14px; }
+  #load .b { width: 200px; height: 6px; background: rgba(255,255,255,.15); border-radius: 3px; overflow: hidden; }
+  #load .b i { display: block; height: 100%; width: 0; background: #ffbe6e; transition: width .2s; }
+  #err { position: fixed; inset: auto 10px 170px 10px; color: #ffd0d0; font-size: 12px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div id="load"><div class="t">🌊 Người giữ biển</div><div class="b"><i id="pbar"></i></div></div>
+<div id="hud"><h1>Người giữ biển</h1><p id="sub">Ca trực · Ngày 1/5</p></div>
+<div id="credit">© Võ Thái Anh<br>Model: Kenney, KayKit (CC0)</div>
+<div id="bar">
+  <button data-mode="day" title="Ban ngày">☀️</button>
+  <button data-mode="sunset" class="on" title="Chiều tà">🌅</button>
+  <button data-mode="night" title="Ban đêm">🌙</button>
+  <button data-mode="storm" title="Bão">⛈️</button>
+</div>
+<div id="joy"><i></i></div>
+<button id="jump">NHẢY</button>
+<div id="toast"></div>
+<div id="hint">Kéo vòng tròn để đi · Bấm NHẢY để nhảy · Kéo màn hình để xoay</div>
+<div id="err"></div>
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.min.js", "three/addons/": "./lib/addons/" } }
+</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

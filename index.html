@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Game của Võ Thái Anh</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#14121f;color:#eee;padding:20px 14px 40px}
+h1{margin:0 0 4px;font-size:26px;text-align:center}
+p.sub{margin:0 0 22px;text-align:center;color:#a9a3c4;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;max-width:1000px;margin:0 auto}
+.card{background:#211d33;border:1px solid #332d4d;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.top{display:flex;align-items:center;gap:12px}
+.ico{font-size:34px;width:52px;height:52px;display:grid;place-items:center;background:#2c2744;border-radius:12px;flex:none}
+.name{font-weight:700;font-size:17px}
+.st{font-size:12px;padding:2px 8px;border-radius:99px;display:inline-block;margin-top:3px}
+.ok{background:#1f4d33;color:#8ef0b4}.wip{background:#4d3f1f;color:#f0d38e}.none{background:#3a3550;color:#b9b3d6}
+.desc{font-size:14px;color:#c9c4e0;line-height:1.45;flex:1}
+.btns{display:flex;gap:8px}
+a.b{flex:1;text-align:center;text-decoration:none;padding:10px;border-radius:10px;font-weight:600;font-size:14px}
+a.play{background:#ffcc4d;color:#2a1d00}a.dir{background:#2f2a46;color:#ddd}
+footer{text-align:center;color:#6f6990;font-size:12px;margin-top:28px}
+</style>
+</head>
+<body>
+<h1>🎮 Game của Võ Thái Anh</h1>
+<p class="sub">Mỗi game một mục, bấm "Chơi" để chơi ngay trên điện thoại</p>
+<div class="grid" id="g"></div>
+<footer>© Võ Thái Anh</footer>
+<script>
+const R='https://github.com/Thaianh111/game-moi/tree/main/prototypes/';
+const G=[
+ ['🐶','Lu Troll','ok','Chơi được','Nhảy màn troll kiểu "con mèo trắng" với chú chó Lu. 3 màn toàn bẫy, chết là bị chọc quê.','prototypes/lu-troll/','lu-troll'],
+ ['⚔️','Kiếm Sĩ Bất Tận','ok','Chơi được','Kiếm sĩ chém quái, 20 màn, 4 boss, 40 kỹ năng, hợp kích.','prototypes/kiem-si-bat-tan/','kiem-si-bat-tan'],
+ ['🌾','Nông Trại Nhỏ','ok','Chơi được','Game nông trại (repo riêng nongtrai-nho).','https://thaianh111.github.io/nongtrai-nho/','nong-trai-nho'],
+ ['🌊','Người Giữ Biển','wip','Cảnh thử','Sống trên bè giữa biển kiểu Raft, êm đềm xen bão tố.','prototypes/nguoi-giu-bien/','nguoi-giu-bien'],
+ ['🏯','Lục Diện Vương Quyền','none','Chưa đưa code lên','Người đánh Orc, chuyển sang ghép quân pixel art.','','luc-dien-vuong-quyen'],
+ ['🏝️','Về Cồn – Đám Giỗ','none','Chưa đưa code lên','Cháu về cồn miền Tây lo đám giỗ ông.','','ve-con-dam-gio'],
+ ['🚀','Bắn Phi Thuyền','none','Chưa đưa code lên','Bắn phi thuyền ngoài vũ trụ.','','ban-phi-thuyen'],
+ ['🤖','Nhảy Màn Kiểu Megaman','none','Chưa đưa code lên','Nhảy màn bắn súng kiểu Megaman.','','nhay-man-megaman'],
+ ['🏰','Thủ Thành Ghép Tháp','none','Chưa đưa code lên','Thủ thành, ghép tháp mạnh hơn.','','thu-thanh-ghep-thap'],
+ ['🧱','Thủ Thành Mê Cung 3D','none','Chưa đưa code lên','Quái tự tìm đường né tháp.','','thu-thanh-me-cung-3d'],
+ ['🐕','Chạm Chó 2 Người','none','Chưa đưa code lên','Hai người chơi chung một máy.','','cham-cho-2-nguoi'],
+ ['🧘','Tu Tiên','none','Chưa đưa code lên','Tu tiên kiểu Quỷ Cốc Bát Hoang.','','tu-tien']];
+document.getElementById('g').innerHTML=G.map(([i,n,c,s,d,p,f])=>`<div class="card"><div class="top"><div class="ico">${i}</div><div><div class="name">${n}</div><span class="st ${c}">${s}</span></div></div><div class="desc">${d}</div><div class="btns">${p?`<a class="b play" href="${p}">▶ Chơi</a>`:''}<a class="b dir" href="${R+f}">📁 Mục</a></div></div>`).join('');
+</script>
+</body>
+</html>
