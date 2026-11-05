@@ -32,12 +32,25 @@ Chém/Nhảy/Lướt, 3 ô kỹ năng và ô Hợp Kích mà không bấm nhầm
 
 ## Cách chạy
 
-- **Bản một file (khuyên dùng):** chạy `python3 build-standalone.py` để gói `prototype.html` + `sprites/`
-  thành `kiem-si-bat-tan.html` (~4,5 MB, ảnh nhúng sẵn). Mở bằng cách bấm đúp, gửi qua điện thoại được.
-  File này có sẵn trong repo để tải về chơi luôn. Sửa `prototype.html` hay `sprites/` thì nhớ build lại rồi commit cùng.
-- Mở thẳng `prototype.html` bằng `file://` vẫn chơi được, nhưng trình duyệt không cho đọc điểm ảnh của
-  ảnh rời nên **Kiếm Sĩ không có lưỡi kiếm nguyên tố**. Bản một file và link claude.ai thì có.
-- Trên điện thoại: cầm ngang, bấm ⛶ để vào toàn màn hình (nếu trình duyệt cho phép).
+- **Link chơi cho người test (khuyên dùng):** https://thaianh111.github.io/game-moi/prototypes/kiem-si-concept/
+  (tự chuyển tới `prototype.html`). Bản này tải từng phần: nhân vật, quái, icon xong là vào game ngay (có thanh %), ảnh
+  boss (~2 MB) tải ngầm sau. Lần sau mở lại gần như tức thì và **chơi được khi không có mạng** (service worker `sw.js`).
+- **Cài như app (PWA):** Chrome Android: menu ⋮ → "Cài đặt ứng dụng" (hoặc nút 📲 trong ⚙ Cài đặt ở sảnh); iPhone Safari:
+  Chia sẻ ⬆ → "Thêm vào MH chính". Mở từ biểu tượng là chạy toàn màn hình, cầm ngang (`manifest.webmanifest`, `icons/`).
+- **Bản một file:** `python3 build-standalone.py` gói `prototype.html` + `sprites/` (ảnh + âm thanh) thành `kiem-si-bat-tan.html`
+  (~5,8 MB). Bấm đúp là chơi, gửi qua Zalo / Messenger được. File có sẵn trong repo; sửa game thì build lại rồi commit cùng.
+- **Sau khi sửa game** chạy cả `python3 build-standalone.py` và `python3 build-pwa.py` (tạo lại `sw.js` với phiên bản mới để
+  máy người chơi tự cập nhật).
+- Mở thẳng `prototype.html` bằng `file://` vẫn chơi được, nhưng **Kiếm Sĩ không có lưỡi kiếm nguyên tố** và dùng tiếng tạo
+  bằng code (trình duyệt chặn đọc file rời).
+
+### Cài đặt (⚙ ở sảnh)
+
+- **Đồ họa:** Tự động (mặc định: khung hình trung bình chậm hơn 26 ms trong 4 giây trận đấu thì tự chuyển sang Nhẹ), Đẹp, Nhẹ
+  (vẽ ở độ phân giải 1×, tối đa 260 hạt hiệu ứng thay vì 900, bớt hạt môi trường).
+- **Âm thanh** bật / tắt.
+- **Mã lưu tiến trình:** mã `KSBT1.…` chứa toàn bộ vàng, đồ, cấp, thành tựu. Sao chép để giữ, dán vào máy khác để khôi phục
+  (dữ liệu chỉ nằm trong trình duyệt, xóa dữ liệu trình duyệt là mất nếu không giữ mã).
 
 ### Điều khiển (kiểu MOBA)
 
@@ -105,6 +118,19 @@ Sau khi chọn bùa, nếu màn sau không phải boss thì 45% gặp **ngã r�
   Vàng tiêu ở đây không mang về sảnh.
 
 Màn kết thúc liệt kê các bùa đã lấy.
+
+## 4 vùng đất
+
+Mỗi 5 màn một vùng (màn boss thuộc vùng của nó). Màn đầu của vùng ghi tên vùng và bẫy trên bảng giới thiệu màn.
+
+| Màn | Vùng | Nền | Bẫy (chỉ ở màn quái) |
+|---|---|---|---|
+| 1–5 | **Rừng Đêm** | trăng, đồi xanh đêm, đom đóm | không có (vùng làm quen) |
+| 6–10 | **Hang Dung Nham** | trần nhũ đá, ánh lửa dưới đáy, vết nứt dung nham, tàn lửa bay | **Đá rơi:** 4,5–6,5 giây một lần, 3 vạch đỏ báo trước 1,1 giây (1 vạch ngay chỗ mình), đá rơi trúng mình mất máu, trúng quái cũng gây sát thương |
+| 11–15 | **Đền Băng** | trăng băng, cột băng, nhũ băng, tuyết rơi | **Sàn trơn:** tăng / giảm tốc trên sàn chỉ còn 22% (chạy khó dừng, khó quay đầu), bù lại lướt xa hơn 15% |
+| 16–20 | **Thành Ma** | trăng xanh lục, tháp đổ nát, bia mộ | **Sương mù:** chỉ sáng quanh người chơi (màn boss sáng rộng hơn); **hồn ma** bay chậm đuổi theo, chạm là mất máu, chém tan được |
+
+Vô Tận lặp lại 4 vùng theo đúng thứ tự mỗi vòng.
 
 ## Hướng dẫn lần đầu
 
@@ -459,7 +485,7 @@ Chữ đuôi theo họ: Cửu Thiên Quyển (lốc), Phá Thiên Trảm (trăng
 `screenshot-lobby.png` (sảnh: tab Nhân vật, đủ 6 món), `screenshot-shop.png` (cửa hàng), `screenshot-gear-ingame.png`
 (vương miện, vòng ngọc bội, áo phủ màu trong trận), `screenshot-dashchain.png` (LƯỚT CHÉM ×3), `screenshot-dragon.png`
 (Phong Long), `screenshot-end-loot.png` (màn kết thúc có vàng + đồ nhặt được).
-`screenshot-tutorial.png` (hướng dẫn), `screenshot-quests.png` (nhiệm vụ + thành tựu), `screenshot-level.png` (cấp + tiềm năng +
+`screenshot-tutorial.png` (hướng dẫn), `screenshot-biomes.png` (4 vùng đất), `screenshot-settings.png` (cài đặt + mã lưu), `screenshot-quests.png` (nhiệm vụ + thành tựu), `screenshot-level.png` (cấp + tiềm năng +
 hào quang), `screenshot-endless.png` (Vô Tận vòng 2).
 
 Icon trang bị vẽ bằng code (`itemIcon`: kiếm, mũ, áo, găng, giày, ngọc bội theo màu hệ, viền theo độ hiếm).

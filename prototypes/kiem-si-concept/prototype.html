@@ -8,6 +8,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07061a">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kiếm Sĩ">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
 <title>Kiếm Sĩ Bất Tận</title>
 <style>
   :root {
@@ -139,7 +145,19 @@
     background: var(--bg); z-index: 10; font-size: 18px; text-align: center; padding: 20px; }
   #rotate span { font-size: 46px; }
   @media (orientation: portrait) { #rotate { display: flex; } }
-  #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); z-index: 11; font-size: 16px; color: var(--muted); }
+  #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #07061a; z-index: 11; font-size: 16px; color: var(--muted); }
+  .lbox { display: flex; flex-direction: column; align-items: center; gap: 10px; width: min(320px, 70vw); }
+  .lbox b { font: italic 900 22px 'Arial Black', system-ui, sans-serif; color: #ffd45a; text-shadow: 0 0 12px rgba(255,110,40,.7); }
+  .lbar { width: 100%; height: 8px; border-radius: 6px; background: rgba(255,255,255,.1); overflow: hidden; }
+  .lbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffd45a, #ff8a3d); transition: width .15s; }
+  .lbox span { font-size: 12px; }
+  #settings { position: fixed; inset: 0; z-index: 30; background: rgba(4,4,10,.7); display: flex; align-items: center; justify-content: center; }
+  #settings[hidden] { display: none; }
+  .sbox { width: min(520px, 92vw); max-height: 92vh; overflow: auto; background: #141226; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 12px 14px; color: var(--text); display: flex; flex-direction: column; gap: 6px; }
+  .sbox h3 { margin: 0; color: #ffd45a; } .sbox h4 { margin: 6px 0 0; font-size: 12px; color: #ffd45a; } .sbox small { color: var(--muted); font-size: 10.5px; }
+  .srow2 { display: flex; align-items: center; gap: 8px; font-size: 12.5px; } .srow2 > span { width: 90px; flex: none; color: var(--muted); }
+  .sbox textarea { width: 100%; box-sizing: border-box; height: 46px; background: rgba(0,0,0,.35); color: var(--text); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; font: 10px monospace; resize: none; }
+  .sbox .mini { align-self: flex-start; } .row2.end { justify-content: flex-end; } .row2.end .btn { padding: 7px 18px; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -161,9 +179,10 @@
 <div id="lobby" hidden>
   <div class="lb-top"><div class="lb-title">KIẾM SĨ BẤT TẬN</div>
     <div class="tabs"><button data-tab="char" class="on">Nhân vật</button><button data-tab="bag">Túi đồ</button><button data-tab="shop">Cửa hàng</button><button data-tab="quest">Nhiệm vụ<em id="qBadge"></em></button></div>
-    <button class="snd" id="lbSnd">🔊</button><div class="gold">🪙 <b id="lbGold">0</b></div><button class="snd" id="lbTut" title="Hướng dẫn">📘</button><div class="mode"><button data-mode="normal">Thường</button><button data-mode="endless">Vô Tận</button></div><button class="btn play" id="lbPlay">VÀO TRẬN ▶</button></div>
+    <button class="snd" id="lbSnd">🔊</button><div class="gold">🪙 <b id="lbGold">0</b></div><button class="snd" id="lbTut" title="Hướng dẫn">📘</button><button class="snd" id="lbSet" title="Cài đặt">⚙</button><div class="mode"><button data-mode="normal">Thường</button><button data-mode="endless">Vô Tận</button></div><button class="btn play" id="lbPlay">VÀO TRẬN ▶</button></div>
   <div class="lb-body" id="lbBody"></div>
 </div>
+<div id="settings" hidden></div>
 <div id="title" hidden><canvas id="titleCv"></canvas><div class="tap">Chạm để bắt đầu</div></div>
 <button class="tb" id="tutSkip" hidden>Bỏ qua ›</button>
 <div id="rotate"><span>📱↻</span>Xoay ngang điện thoại để chơi nha</div>
@@ -800,7 +819,7 @@ const combo = { hits: 0, t: 0, pop: 0 };
 const G = { mode: 'select', char: 'kiemsi', stage: 0, phase: '', pt: 0, groups: [], total: 0, spawnT: 0, score: 0, kills: 0, killCount: 0, time: 0,
   skills: [], up: {}, elem: null, cd: {}, energy: 0, slowT: 0, slowMax: 4, fuBanner: 0, fuName: '', slotPop: [0, 0, 0, 0], slotDeny: [0, 0, 0, 0],
   marks: [], lava: { state: 'off', t: 0 }, flash: 0, flashC: '255,245,230', nameT: -1, bossBar: 0, bossName: '', bossSub: '',
-  endT: -1, won: false, pickNext: false, boons: {}, eq: null, look: {}, gold: 0, loot: [], offered: [], prevSeen: [], bossOrder: ['eye', 'beast', 'lord', 'lordx'], stageGroups: [], stageLayout: [] };
+  endT: -1, won: false, pickNext: false, biome: 0, lowFx: false, boons: {}, eq: null, look: {}, gold: 0, loot: [], offered: [], prevSeen: [], bossOrder: ['eye', 'beast', 'lord', 'lordx'], stageGroups: [], stageLayout: [] };
 let hitstop = 0, shake = 0;
 
 // ============ Tiện ích ============
@@ -1002,7 +1021,7 @@ function stepAnim(a, dt) {
 const eqv = k => (G.eq ? G.eq[k] : 0) / 100;   // chỉ số trang bị (%)
 function runSpeed() { return T.runSpeed * CH.spd * (has('haste') ? 1.15 : 1) * (P.hasteT > 0 ? 1.5 : 1) * (1 + eqv('spd')); }
 function atkSpd() { return CH.aspd * (P.rageT > 0 ? 1.4 : 1) * (P.hasteT > 0 ? 1.3 : 1) * (1 + eqv('aspd')); }
-function dashSpeed() { return T.dashSpeed * CH.dash * (1 + eqv('dash')); }
+function dashSpeed() { return T.dashSpeed * CH.dash * (1 + eqv('dash')) * (G.biome === 2 ? 1.15 : 1); }
 function cdFull(k) { return SKILLS[k].cd * T.skillCd * (G.up[k] ? 0.7 : 1) * (1 - Math.min(0.5, eqv('cdr'))); }
 function enMul() { return 1 + eqv('en'); }
 function doJump() {
@@ -1104,7 +1123,7 @@ function airJumpOrWall() {
 function moveState(dt, dir) {
   if (P.lock <= 0) {
     const maxV = P.dashJump && !P.onGround ? dashSpeed() * 0.92 : runSpeed();
-    P.vx = approach(P.vx, dir * maxV, (P.onGround ? T.groundAccel : T.airAccel) * dt);
+    P.vx = approach(P.vx, dir * maxV, (P.onGround ? T.groundAccel * (G.biome === 2 && G.mode === 'play' ? 0.22 : 1) : T.airAccel) * dt);
     if (dir) P.face = dir;
   }
   gravityStep(dt);
@@ -2621,6 +2640,7 @@ function updateZones(dt) {
           }
         }
         break;
+      case 'rockfall': updateRockfall(z, dt); break;
       default: updateZones2(z, dt); updateZones3(z, dt); break;
       case 'updraft':
         if (Math.random() < dt * 80) fx.push({ type: 'mote', x: z.x + rnd(-36, 36), y: z.y - rnd(0, 30), vx: rnd(-20, 20), vy: rnd(-520, -300), r: rnd(1.5, 3), col: '#cff6ff', g: 0, life: 0.4, max: 0.4 });
@@ -3397,13 +3417,15 @@ function rollRun() {
 }
 function introOf(i) {
   const nb = bossKindAt(i + 1);
-  return [STAGES[i].intro, nb && `Màn sau: ${BOSSES[nb].name}`].filter(Boolean).join(' · ');
+  const bz = i % 5 === 0 ? `Vùng ${BIOMES[biomeOf(i)].name}: ${BIOMES[biomeOf(i)].sub}` : '';
+  return [bz, STAGES[i].intro, nb && `Màn sau: ${BOSSES[nb].name}`].filter(Boolean).join(' · ');
 }
 
 // ============ Luồng chơi: 20 màn (boss ở màn 5, 10, 15, 20) ============
 function startStage(i) {
   G.stage = i; G.pt = 0; G.marks.length = 0;
   const st = STAGES[i];
+  setBiome(biomeOf(i)); G.hzT = 4;
   const L = G.stageLayout[i]; if (L !== undefined && L !== layoutIdx) rearrangeTo(L);
   G.lava = { state: 'off', t: 0 };
   if (st.boss) {
@@ -3458,7 +3480,7 @@ function updateGame(dt) {
     }
     if (G.phase === 'clear' && G.pt > 2.2) { G.phase = 'choosing'; afterStage(); }
   } else {
-    if (G.phase === 'warning' && G.pt > 2.9) { G.phase = 'entrance'; G.pt = 0; ({ eye: spawnBoss, beast: spawnBeast, lord: () => spawnLord(false), lordx: () => spawnLord(true) })[G.bossKind](); scaleBoss(); }
+    if (G.phase === 'warning' && G.pt > 2.9 && window.bossArtReady()) { G.phase = 'entrance'; G.pt = 0; ({ eye: spawnBoss, beast: spawnBeast, lord: () => spawnLord(false), lordx: () => spawnLord(true) })[G.bossKind](); scaleBoss(); }
     if (boss) ({ boss: updateBoss, beast: updateBeast, lord: updateLord })[boss.kind](G.slowT > 0 ? dt * 0.25 : dt);
   }
   if (G.endT > 0) {
@@ -3542,7 +3564,8 @@ function updateFx(dt) {
     else if (p.type === 'mote') { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += (p.g || 0) * dt; p.vx *= 1 - 2 * dt; }
     else if (p.type === 'feather') { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 1 - 2.5 * dt; p.vy = p.vy * (1 - 2 * dt) + 70 * dt; p.rot += dt * 5; }
   }
-  if (fx.length > 900) fx.splice(0, fx.length - 900);
+  const fxCap = G.lowFx ? 260 : 900;
+  if (fx.length > fxCap) fx.splice(0, fx.length - fxCap);
   for (let i = nums.length - 1; i >= 0; i--) {
     const c = nums[i]; c.t += dt; c.shift += (c.shiftTo - c.shift) * Math.min(1, dt * 16);
     if (c.t > c.life) nums.splice(i, 1);
@@ -3573,8 +3596,10 @@ function step(dt) {
   updateVortices(dt);
   updateSwords(dt);
   updatePillars(md);
+  updateWisps(md);
   updateOrbs(md);
   updatePickups(dt);
+  if (G.mode === 'play') { ambientTick(dt); hazardTick(dt); }
   updateGame(dt);
   for (let i = timers.length - 1; i >= 0; i--) { const t = timers[i]; t.d -= dt; if (t.d <= 0) { timers.splice(i, 1); t.fn(); } }
 }
@@ -3596,6 +3621,7 @@ function frame(now) {
     while (acc >= STEP && n++ < 8) { try { step(STEP); } catch (e) { loopError('step', e); } acc -= STEP; }
     if (acc > STEP * 8) acc = 0;   // máy quá chậm: bỏ bớt, không dồn bước
   }
+  perfTick(dt);
   try { setMusic(musicFor()); musicTick(); } catch (e) { loopError('music', e); }
   try { render(now / 1000); }
   catch (e) {
@@ -3620,7 +3646,7 @@ const tint = document.createElement('canvas'); tint.width = tint.height = 128;
 const tctx = tint.getContext('2d');
 function safeInset(name) { return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0; }
 function resize() {
-  cssW = innerWidth; cssH = innerHeight; dpr = Math.min(devicePixelRatio || 1, 2.5);
+  cssW = innerWidth; cssH = innerHeight; dpr = G.lowFx ? 1 : Math.min(devicePixelRatio || 1, 2.5);
   cv.width = Math.round(cssW * dpr); cv.height = Math.round(cssH * dpr);
   scale = Math.min(cssH / H, cssW / 560);
   const newAW = Math.round(clamp(cssW / scale, 560, 860));
@@ -3652,34 +3678,37 @@ function bakeBg() {
   const g = bg.getContext('2d');
   g.setTransform(k, 0, 0, k, 0, 0);
   // trời đêm xanh lạnh để kiếm sĩ áo đỏ nổi lên
+  const B = BIOMES[G.biome || 0];
   const sky = g.createLinearGradient(0, 0, 0, FLOOR);
-  sky.addColorStop(0, '#0d1320'); sky.addColorStop(0.6, '#1a2337'); sky.addColorStop(1, '#27304a');
+  sky.addColorStop(0, B.sky[0]); sky.addColorStop(0.6, B.sky[1]); sky.addColorStop(1, B.sky[2]);
   g.fillStyle = sky; g.fillRect(0, 0, AW, H);
   const mx = AW * 0.73, my = 64;
   const glow = g.createRadialGradient(mx, my, 10, mx, my, 120);
-  glow.addColorStop(0, 'rgba(255,236,214,.28)'); glow.addColorStop(1, 'rgba(255,236,214,0)');
+  glow.addColorStop(0, `rgba(${B.glow},.28)`); glow.addColorStop(1, `rgba(${B.glow},0)`);
   g.fillStyle = glow; g.fillRect(mx - 120, my - 120, 240, 240);
-  g.fillStyle = '#f4e6d4'; g.beginPath(); g.arc(mx, my, 30, 0, Math.PI * 2); g.fill();
-  g.fillStyle = '#18203a';
+  if (B.moon) { g.fillStyle = B.moon; g.beginPath(); g.arc(mx, my, 30, 0, Math.PI * 2); g.fill(); }
+  else { const lg = g.createLinearGradient(0, FLOOR - 80, 0, FLOOR); lg.addColorStop(0, `rgba(${B.glow},0)`); lg.addColorStop(1, `rgba(${B.glow},.22)`); g.fillStyle = lg; g.fillRect(0, FLOOR - 80, AW, 80); }
+  g.fillStyle = B.hill[0];
   g.beginPath(); g.moveTo(0, 230);
   for (let x = 0; x <= AW; x += 40) g.lineTo(x, 200 - Math.sin(x * 0.011) * 40 - Math.sin(x * 0.031) * 14);
   g.lineTo(AW, FLOOR); g.lineTo(0, FLOOR); g.fill();
-  g.fillStyle = '#141a2e';
+  g.fillStyle = B.hill[1];
   g.beginPath(); g.moveTo(0, 260);
   for (let x = 0; x <= AW; x += 30) g.lineTo(x, 245 - Math.sin(x * 0.017 + 2) * 22 - Math.sin(x * 0.05) * 6);
   g.lineTo(AW, FLOOR); g.lineTo(0, FLOOR); g.fill();
   const fl = g.createLinearGradient(0, FLOOR, 0, H);
-  fl.addColorStop(0, '#2b2f40'); fl.addColorStop(1, '#141722');
+  fl.addColorStop(0, B.floor[0]); fl.addColorStop(1, B.floor[1]);
   g.fillStyle = fl; g.fillRect(0, FLOOR, AW, H - FLOOR);
-  g.fillStyle = '#6f7a99'; g.fillRect(0, FLOOR, AW, 2);
+  g.fillStyle = B.edge; g.fillRect(0, FLOOR, AW, 2);
   g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = 1;
   for (let x = 0; x < AW; x += 48) { const o = (Math.floor(x / 48) % 2) * 24; g.beginPath(); g.moveTo(x + o, FLOOR + 2); g.lineTo(x + o, FLOOR + 22); g.stroke(); }
   g.beginPath(); g.moveTo(0, FLOOR + 22); g.lineTo(AW, FLOOR + 22); g.stroke();
+  biomeDecor(g);
   // tường hai bên, chân tường là cổng tối cho quái ra vào
   for (const left of [true, false]) {
     const x0 = left ? 0 : AW - WALL, edge = left ? WALL - 2 : AW - WALL;
     const wg = g.createLinearGradient(x0, 0, x0 + WALL, 0);
-    wg.addColorStop(0, left ? '#151926' : '#262b3c'); wg.addColorStop(1, left ? '#262b3c' : '#151926');
+    wg.addColorStop(0, left ? B.wall[0] : B.wall[1]); wg.addColorStop(1, left ? B.wall[1] : B.wall[0]);
     g.fillStyle = wg; g.fillRect(x0, 0, WALL, GATE_TOP);
     g.strokeStyle = 'rgba(0,0,0,.3)';
     for (let y = 0; y < GATE_TOP; y += 22) {
@@ -3687,7 +3716,7 @@ function bakeBg() {
       const mxw = x0 + ((y / 22) % 2 ? WALL * 0.35 : WALL * 0.7);
       g.beginPath(); g.moveTo(mxw, y); g.lineTo(mxw, Math.min(y + 22, GATE_TOP)); g.stroke();
     }
-    g.fillStyle = '#7d89aa'; g.fillRect(edge, 0, 2, GATE_TOP);
+    g.fillStyle = B.wallEdge; g.fillRect(edge, 0, 2, GATE_TOP);
     const gg = g.createLinearGradient(left ? 0 : AW, 0, left ? WALL + 18 : AW - WALL - 18, 0);
     gg.addColorStop(0, '#05070c'); gg.addColorStop(1, 'rgba(5,7,12,0)');
     g.fillStyle = gg; g.fillRect(left ? 0 : AW - WALL - 18, GATE_TOP, WALL + 18, FLOOR - GATE_TOP);
@@ -3698,7 +3727,7 @@ function bakeBg() {
   }
 }
 function drawPlat(p) {
-  ctx.fillStyle = '#3a3346'; ctx.fillRect(p.x, p.y, p.w, p.h);
+  ctx.fillStyle = BIO().plat; ctx.fillRect(p.x, p.y, p.w, p.h);
   ctx.fillStyle = '#d49a6a'; ctx.fillRect(p.x, p.y, p.w, 2);
   ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(p.x, p.y + p.h - 3, p.w, 3);
   if (p.glow > 0) { ctx.fillStyle = `rgba(190,110,255,${p.glow * 0.6})`; ctx.fillRect(p.x - 2, p.y - 2, p.w + 4, p.h + 4); }
@@ -4157,7 +4186,7 @@ function drawOrbs(time) {
       ctx.fillStyle = '#6a5a8a'; ctx.beginPath(); ctx.moveTo(0, 7); ctx.lineTo(2.5, 0); ctx.lineTo(0, -7); ctx.lineTo(-2.5, 0); ctx.fill();
       ctx.restore(); continue;
     }
-    const cols = o.kind === 'acid' ? ['#f2ffd0', '#7ad63a', 'rgba(40,120,20,0)'] : o.kind === 'fireball' ? ['#fff2b0', '#ff7a1a', 'rgba(200,30,10,0)'] : ['#ffe3f0', '#ff3f8a', 'rgba(140,20,180,0)'];
+    const cols = o.kind === 'wisp' ? ['#ffffff', '#a8ffc8', 'rgba(60,200,120,0)'] : o.kind === 'acid' ? ['#f2ffd0', '#7ad63a', 'rgba(40,120,20,0)'] : o.kind === 'fireball' ? ['#fff2b0', '#ff7a1a', 'rgba(200,30,10,0)'] : ['#ffe3f0', '#ff3f8a', 'rgba(140,20,180,0)'];
     const g = ctx.createRadialGradient(o.x, o.y, 1, o.x, o.y, o.r * 2.2);
     g.addColorStop(0, cols[0]); g.addColorStop(0.35, cols[1]); g.addColorStop(1, cols[2]);
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(o.x, o.y, o.r * (2.2 + Math.sin(time * 20) * 0.15), 0, 6.29); ctx.fill();
@@ -4232,7 +4261,7 @@ function drawZones(time) {
       ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(z.x - 20, z.y); ctx.lineTo(z.x - 46, z.y - h); ctx.lineTo(z.x + 46, z.y - h); ctx.lineTo(z.x + 20, z.y); ctx.fill();
       ctx.strokeStyle = '#e8fbff'; ctx.lineWidth = 2;
       for (let k = 0; k < 6; k++) { const yy = z.y - ((time * 500 + k * 40) % h), rx = 18 + (z.y - yy) * 0.12; ctx.beginPath(); ctx.ellipse(z.x, yy, rx, rx * 0.28, 0, 0, 4); ctx.stroke(); }
-    } else { ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; drawZones2(z, time); drawZones3(z, time); }
+    } else { ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; if (z.kind === 'rockfall') drawRockfall(z); else { drawZones2(z, time); drawZones3(z, time); } }
   }
   ctx.restore();
 }
@@ -4738,6 +4767,7 @@ function render(time) {
   drawFx();
   drawNumbers();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawFog();
   drawSlowOverlay(time);
   if (G.flash > 0) { ctx.fillStyle = `rgba(${G.flashC},${Math.min(0.85, G.flash)})`; ctx.fillRect(0, 0, cssW, cssH); }
   if (G.mode === 'play') {
@@ -5019,11 +5049,12 @@ function showTitle() {
   titleEl.onclick = () => { titleEl.hidden = true; showLobby(); };
 }
 // #banner: xuất banner 1280x640 (để chụp làm banner.png)
-function exportBanner() {
-  const c = document.createElement('canvas'); c.width = 1280; c.height = 640; c.id = 'bannerOut';
-  c.style.cssText = 'position:fixed;left:0;top:0;width:1280px;height:640px;z-index:999';
+function exportBanner(k) {   // k = 3 cho bản nét gấp 3 (cắt làm icon app)
+  k = k || 1;
+  const c = document.createElement('canvas'); c.width = 1280 * k; c.height = 640 * k; c.id = 'bannerOut';
+  c.style.cssText = `position:fixed;left:0;top:0;width:${1280 * k}px;height:${640 * k}px;z-index:999`;
   document.body.append(c);
-  drawTitleArt(c.getContext('2d'), 1280, 640, 1.3);
+  drawTitleArt(c.getContext('2d'), 1280 * k, 640 * k, 1.3);
 }
 // ============ Trang bị: 6 ô, độ hiếm, chỉ số, ngoại hình ============
 const SLOTS = [['weapon', 'Vũ khí'], ['helm', 'Mũ'], ['armor', 'Áo giáp'], ['glove', 'Găng'], ['boots', 'Giày'], ['charm', 'Ngọc bội']];
@@ -5351,6 +5382,7 @@ document.getElementById('lbPlay').onclick = () => {
   lobbyEl.hidden = true; G.char = SAVE.char; CH = CHARS[SAVE.char]; resetGame(); showPick('start');
 };
 document.getElementById('lbTut').onclick = () => startTutorial();
+document.getElementById('lbSet').onclick = () => showSettings();
 document.getElementById('tutSkip').onclick = () => endTutorial();
 for (const b of document.querySelectorAll('#lobby .mode button')) b.onclick = () => { SAVE.mode = b.dataset.mode; saveSave(); renderLobby(); };
 // cuối trận: cộng vàng + đồ nhặt được vào túi, làm mới cửa hàng
@@ -5808,6 +5840,169 @@ function tutDraw() {
   }
 }
 
+// ============ 4 vùng đất: mỗi 5 màn một vùng, nền + bẫy + hạt môi trường riêng ============
+const BIOMES = [
+  { name: 'Rừng Đêm', sub: 'Đom đóm bay, trăng sáng: nơi bắt đầu', sky: ['#0d1320', '#1a2337', '#27304a'], moon: '#f4e6d4', glow: '255,236,214',
+    hill: ['#18203a', '#141a2e'], floor: ['#2b2f40', '#141722'], edge: '#6f7a99', wall: ['#151926', '#262b3c'], wallEdge: '#7d89aa', plat: '#3a3346', amb: 'firefly' },
+  { name: 'Hang Dung Nham', sub: 'Đá rơi từ trần hang: tránh chỗ có dấu đỏ', sky: ['#160604', '#36100a', '#5a1c0e'], moon: null, glow: '255,110,40',
+    hill: ['#2a0e08', '#1e0a06'], floor: ['#3a1a10', '#1a0a06'], edge: '#ff7a3a', wall: ['#1e0c08', '#3a1a10'], wallEdge: '#c06a3a', plat: '#4a2a1e', amb: 'ember' },
+  { name: 'Đền Băng', sub: 'Sàn băng trơn trượt: chạy khó dừng, lướt xa hơn', sky: ['#0a1a2a', '#1a3a52', '#3a6a8a'], moon: '#eaf6ff', glow: '200,240,255',
+    hill: ['#2a4a66', '#1e3a52'], floor: ['#5a7a9a', '#2a4a66'], edge: '#d8f0ff', wall: ['#1e3a52', '#3a5a7a'], wallEdge: '#bfe4ff', plat: '#5a7a9a', amb: 'snow' },
+  { name: 'Thành Ma', sub: 'Sương mù che tầm nhìn, hồn ma lởn vởn: chém tan chúng', sky: ['#0a0612', '#1a1026', '#2a1a3a'], moon: '#c8ffd8', glow: '160,255,200',
+    hill: ['#1a1226', '#120c1c'], floor: ['#2a2236', '#120c1a'], edge: '#8a7aaa', wall: ['#120c1c', '#2a2236'], wallEdge: '#9a8ac0', plat: '#3a2e4a', amb: 'wisp' },
+];
+const BIO = () => BIOMES[G.biome || 0];
+function biomeOf(i) { return Math.floor(i / 5) % 4; }
+function setBiome(b) { if (G.biome !== b) { G.biome = b; bakeBg(); } }
+// trang trí riêng của từng vùng trên nền (vẽ một lần vào bg)
+function biomeDecor(g) {
+  const b = G.biome || 0, R = seeded(11 + b);
+  if (b === 1) {   // nhũ đá trên trần + vết nứt dung nham dưới sàn
+    g.fillStyle = '#1a0806';
+    for (let x = 0; x < AW; x += 24 + R() * 30) { const w = 10 + R() * 18, h = 14 + R() * 40; g.beginPath(); g.moveTo(x, 0); g.lineTo(x + w / 2, h); g.lineTo(x + w, 0); g.fill(); }
+    g.strokeStyle = 'rgba(255,110,30,.55)'; g.lineWidth = 1.5;
+    for (let i = 0; i < 10; i++) { let x = R() * AW, y = FLOOR + 4; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (R() - 0.5) * 30; y += 4 + R() * 6; g.lineTo(x, Math.min(H - 2, y)); } g.stroke(); }
+  } else if (b === 2) {   // cột băng / nhũ băng
+    for (let x = 30; x < AW; x += 70 + R() * 60) {
+      const h = 50 + R() * 70, w = 10 + R() * 10;
+      g.fillStyle = 'rgba(190,230,255,.22)'; g.beginPath(); g.moveTo(x - w, FLOOR); g.lineTo(x, FLOOR - h); g.lineTo(x + w, FLOOR); g.fill();
+    }
+    g.fillStyle = 'rgba(220,245,255,.55)';
+    for (let x = 0; x < AW; x += 18 + R() * 26) { const h = 6 + R() * 20; g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 4, h); g.lineTo(x + 8, 0); g.fill(); }
+  } else if (b === 3) {   // tháp đổ nát + bia mộ
+    g.fillStyle = '#100a18';
+    for (let x = 40; x < AW; x += 110 + R() * 80) {
+      const w = 26 + R() * 20, h = 70 + R() * 70, y = 230 - h;
+      g.fillRect(x, y, w, h + 80);
+      for (let k = 0; k < w; k += 8) g.fillRect(x + k, y - 6, 5, 6);
+      g.fillStyle = 'rgba(200,255,210,.35)'; g.fillRect(x + w / 2 - 2, y + 18, 4, 7); g.fillStyle = '#100a18';
+    }
+    g.fillStyle = '#1e1628';
+    for (let x = 20; x < AW; x += 60 + R() * 70) { g.fillRect(x, FLOOR - 14, 9, 14); g.beginPath(); g.arc(x + 4.5, FLOOR - 14, 4.5, Math.PI, 0); g.fill(); }
+  }
+}
+// hạt môi trường (đom đóm, tàn lửa, tuyết, đốm ma)
+function ambientTick(dt) {
+  if (G.lowFx && Math.random() < 0.5) return;
+  const b = G.biome || 0;
+  if (b === 0 && Math.random() < dt * 2.5) fx.push({ type: 'mote', x: rnd(WALL, AW - WALL), y: rnd(120, FLOOR - 10), vx: rnd(-12, 12), vy: rnd(-12, 12), r: 1.6, col: '#d8ff7a', g: 0, life: 2.5, max: 2.5 });
+  else if (b === 1 && Math.random() < dt * 9) fx.push({ type: 'fire', x: rnd(WALL, AW - WALL), y: FLOOR, vx: rnd(-10, 10), vy: rnd(-90, -40), r: rnd(1, 2.2), life: rnd(1, 1.8), max: 1.8 });
+  else if (b === 2 && Math.random() < dt * 14) fx.push({ type: 'frost', x: rnd(0, AW), y: -4, vx: rnd(-14, 6), vy: rnd(30, 60), r: rnd(0.8, 1.8), life: 5, max: 6 });
+  else if (b === 3 && Math.random() < dt * 2) fx.push({ type: 'mote', x: rnd(WALL, AW - WALL), y: rnd(60, FLOOR), vx: rnd(-8, 8), vy: rnd(-14, -4), r: 2.4, col: '#a8ffc8', g: 0, life: 3, max: 3 });
+}
+// bẫy của vùng (chỉ ở màn quái, không ở màn boss / hướng dẫn)
+function hazardTick(dt) {
+  const b = G.biome || 0, st = STAGES[G.stage];
+  if (G.tut || !st || st.boss || G.phase !== 'fight' || P.dead) return;
+  G.hzT = (G.hzT === undefined ? 4 : G.hzT) - dt;
+  if (G.hzT > 0) return;
+  if (b === 1) {   // đá rơi: 3 dấu đỏ, 1 cái ngay chỗ người chơi
+    G.hzT = rnd(4.5, 6.5);
+    const xs = [P.x, rnd(WALL + 30, AW - WALL - 30), rnd(WALL + 30, AW - WALL - 30)];
+    for (const x of xs) zones.push({ kind: 'rockfall', x: clamp(x, WALL + 20, AW - WALL - 20), warn: 1.1, y: -20, vy: 0, life: 3, max: 3, hit: false });
+  } else if (b === 3) {   // hồn ma bay chậm về phía người chơi
+    G.hzT = rnd(5, 7);
+    for (let i = 0; i < 2; i++) { const side = Math.random() < 0.5 ? -1 : 1; orbs.push({ kind: 'wisp', x: side < 0 ? WALL + 10 : AW - WALL - 10, y: rnd(60, 200), vx: 0, vy: 0, r: 8, life: 9, dmg: 8, dead: false }); }
+  } else G.hzT = 99;
+}
+function updateWisps(dt) {
+  for (const o of orbs) {
+    if (o.kind !== 'wisp' || o.dead) continue;
+    const dx = P.x - o.x, dy = (P.y - 26) - o.y, d = Math.hypot(dx, dy) || 1, sp = 55;
+    o.vx += (dx / d * sp - o.vx) * Math.min(1, dt * 1.5); o.vy += (dy / d * sp - o.vy) * Math.min(1, dt * 1.5);
+    o.y = Math.min(o.y, FLOOR - 12);
+  }
+}
+function updateRockfall(z, dt) {
+  if (z.warn > 0) { z.warn -= dt; return; }
+  z.vy += 1400 * dt; z.y += z.vy * dt;
+  if (Math.random() < 0.6) fx.push({ type: 'fire', x: z.x + rnd(-5, 5), y: z.y, vx: 0, vy: -40, r: rnd(2, 3.5), life: 0.25, max: 0.3 });
+  if (!z.hit && z.y >= FLOOR - 10) {
+    z.hit = true; z.life = 0;
+    explode(z.x, FLOOR - 8, 0.9); dust(z.x, FLOOR, 10, 0, 1.2); shake = Math.max(shake, 5);
+    if (!P.dead && Math.abs(P.x - z.x) < 26 && P.y > FLOOR - 70) hurtPlayer(Math.round(9 + G.stage * 0.6), z.x);
+    for (const m of mons) if (!m.dead && Math.abs(m.x - z.x) < 26 && m.y > FLOOR - 40) dealDamage(m, [{ v: 900, crit: false }], 'earth');
+  }
+}
+function drawRockfall(z) {
+  if (z.warn > 0) {
+    const a = 0.45 + Math.sin(performance.now() / 70) * 0.35;
+    ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = '#ff4a2a'; ctx.setLineDash([6, 6]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(z.x, 8); ctx.lineTo(z.x, FLOOR); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#ff4a2a'; ctx.beginPath(); ctx.ellipse(z.x, FLOOR - 1, 18, 4, 0, 0, 6.29); ctx.fill(); ctx.restore();
+    return;
+  }
+  ctx.save(); ctx.translate(z.x, z.y); ctx.rotate(z.y * 0.04);
+  ctx.fillStyle = '#5a3020'; ctx.beginPath(); ctx.moveTo(-11, -4); ctx.lineTo(-4, -11); ctx.lineTo(9, -8); ctx.lineTo(12, 4); ctx.lineTo(2, 11); ctx.lineTo(-9, 8); ctx.fill();
+  ctx.fillStyle = '#ff8a3a'; ctx.fillRect(-3, -2, 6, 3); ctx.restore();
+}
+// sương mù Thành Ma: chỉ sáng quanh người chơi (màn boss sáng rộng hơn)
+function drawFog() {
+  if ((G.biome || 0) !== 3 || G.mode !== 'play' || G.tut) return;
+  const k = scale, x = offX + P.x * k, y = offY + (P.y - 30) * k, r = (STAGES[G.stage] && STAGES[G.stage].boss ? 300 : 175) * k;
+  const g = ctx.createRadialGradient(x, y, r * 0.55, x, y, r * 1.35);
+  g.addColorStop(0, 'rgba(6,4,14,0)'); g.addColorStop(1, 'rgba(6,4,14,.82)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, cssW, cssH);
+}
+
+// ============ Đồ họa: tự giảm khi máy giật ============
+let gfxMode = 'auto';
+try { gfxMode = localStorage.getItem('ksbt-gfx') || 'auto'; } catch (e) {}
+const perf = { t: 0, n: 0, sum: 0 };
+function setGfx(mode) {
+  gfxMode = mode; try { localStorage.setItem('ksbt-gfx', mode); } catch (e) {}
+  G.lowFx = mode === 'low'; resize();
+}
+function perfTick(dt) {   // khung hình trung bình > 26 ms trong 4 giây trận đấu -> bật đồ họa nhẹ
+  if (gfxMode !== 'auto' || G.lowFx || G.mode !== 'play') return;
+  perf.t += dt; perf.sum += dt; perf.n++;
+  if (perf.t >= 4) {
+    if (perf.sum / perf.n > 0.026) { G.lowFx = true; resize(); fx.push({ type: 'label', x: P.x, y: P.y - 80, txt: 'Đã bật đồ họa nhẹ cho mượt', col: '#bfe4ff', life: 2, max: 2, size: 10 }); }
+    perf.t = perf.sum = perf.n = 0;
+  }
+}
+
+// ============ Cài như app (PWA) + mã lưu tiến trình ============
+let installEvt = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
+function registerSW() {
+  if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol) || window.SPRITE_DATA) return;
+  try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
+}
+function saveCode() { return 'KSBT1.' + btoa(unescape(encodeURIComponent(JSON.stringify(SAVE)))); }
+function loadCode(code) {
+  code = (code || '').trim();
+  if (!code.startsWith('KSBT1.')) return 'Mã không đúng (phải bắt đầu bằng KSBT1.)';
+  try {
+    const s = JSON.parse(decodeURIComponent(escape(atob(code.slice(6)))));
+    if (!s || s.ver !== 1 || !Array.isArray(s.inv)) return 'Mã bị hỏng';
+    SAVE = fixSave(s); saveSave(); return '';
+  } catch (e) { return 'Mã bị hỏng'; }
+}
+const setEl = document.getElementById('settings');
+function showSettings() {
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent), standalone = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
+  setEl.innerHTML = `<div class="sbox"><h3>Cài đặt</h3>
+    <div class="srow2"><span>Đồ họa</span><div class="mode gfx">${[['auto', 'Tự động'], ['high', 'Đẹp'], ['low', 'Nhẹ']].map(([k, n]) => `<button data-g="${k}" class="${gfxMode === k ? 'on' : ''}">${n}</button>`).join('')}</div></div>
+    <div class="srow2"><span>Âm thanh</span><div class="mode"><button data-s="on" class="${AU.on ? 'on' : ''}">Bật</button><button data-s="off" class="${AU.on ? '' : 'on'}">Tắt</button></div></div>
+    <div class="srow2"><span>Cài như app</span>${standalone ? '<small>Đang chạy như app ✓</small>' : installEvt ? '<button class="mini gold" id="instBtn">📲 Cài vào máy</button>' : `<small>${ios ? 'Safari: bấm Chia sẻ ⬆ → "Thêm vào MH chính"' : 'Chrome: menu ⋮ → "Cài đặt ứng dụng" / "Thêm vào màn hình chính"'}</small>`}</div>
+    <h4>Mã lưu tiến trình</h4><small>Sao chép mã này để giữ đồ, vàng, cấp; dán vào máy khác để khôi phục.</small>
+    <textarea id="codeOut" readonly>${saveCode()}</textarea><button class="mini" id="copyBtn">Sao chép mã</button>
+    <textarea id="codeIn" placeholder="Dán mã KSBT1.… vào đây"></textarea><button class="mini gold" id="loadBtn">Khôi phục từ mã</button> <small id="codeMsg"></small>
+    <div class="row2 end"><button class="btn" id="setClose">Đóng</button></div></div>`;
+  setEl.hidden = false;
+  for (const b of setEl.querySelectorAll('[data-g]')) b.onclick = () => { setGfx(b.dataset.g); showSettings(); };
+  for (const b of setEl.querySelectorAll('[data-s]')) b.onclick = () => { audioInit(); setSound(b.dataset.s === 'on'); document.getElementById('lbSnd').textContent = AU.on ? '🔊' : '🔇'; showSettings(); };
+  const ib = document.getElementById('instBtn'); if (ib) ib.onclick = async () => { installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; showSettings(); };
+  document.getElementById('copyBtn').onclick = () => { const t = document.getElementById('codeOut'); t.select(); try { navigator.clipboard.writeText(t.value); } catch (e) { document.execCommand('copy'); } document.getElementById('codeMsg').textContent = 'Đã sao chép ✓'; };
+  document.getElementById('loadBtn').onclick = () => {
+    const err = loadCode(document.getElementById('codeIn').value);
+    document.getElementById('codeMsg').textContent = err || 'Đã khôi phục ✓';
+    if (!err) { renderLobby(); setTimeout(showSettings, 600); }
+  };
+  document.getElementById('setClose').onclick = () => { setEl.hidden = true; };
+}
+
 function boot() {
   // Mở file:// với ảnh rời thì trình duyệt không cho đọc điểm ảnh -> chơi bình thường, chỉ không có kiếm nguyên tố.
   // Bản một-file (ảnh nhúng sẵn) và bản trên link claude.ai thì đọc được.
@@ -5816,29 +6011,42 @@ function boot() {
   G.char = SAVE.char; CH = CHARS[G.char];
   resetGame();
   document.getElementById('loading').remove();
-  if (location.hash === '#banner') exportBanner();
+  if (location.hash === '#banner') exportBanner(1);
+  if (location.hash === '#banner3') exportBanner(3);
+  registerSW();
+  if (gfxMode === 'low') { G.lowFx = true; resize(); }
   const sndToggle = () => { audioInit(); setSound(!AU.on); document.getElementById('lbSnd').textContent = AU.on ? '🔊' : '🔇'; };
   document.getElementById('sndBtn').onclick = sndToggle; document.getElementById('lbSnd').onclick = sndToggle;
   setSound(AU.on); document.getElementById('lbSnd').textContent = AU.on ? '🔊' : '🔇';
   addEventListener('click', e => { if (e.target.closest && e.target.closest('button')) sfx('ui'); });
   showTitle();
   window.__dbg = { P, T, G, mons, orbs, combo, VAR, joy, ctrls, get boss() { return boss; }, startStage, resetGame, showPick, trySkill, tryFusion, spawnGroup, STAGES, dealDamage, SPR, CHARS,
-    setChar(k) { G.char = k; CH = CHARS[k]; resetGame(); }, fusionOf, vortices, zones, pets, shots, SKILLS, rollRun, bossKindAt, MON, react, buildPower, pressure, showTitle, fusionOf2: fusionOf, startTutorial, endTutorial, nextLoop, runSummary, checkAch, dailyList, BUF, AU, BOONS, gainBoon, afterStage, bn, sfx, get SAVE() { return SAVE; }, set SAVE(v) { SAVE = v; }, showLobby, showEnd, makeItem, equipItem, pickups, eqStats, commitRun, refreshShop, newSave, renderLobby };
+    setChar(k) { G.char = k; CH = CHARS[k]; resetGame(); }, fusionOf, vortices, zones, pets, shots, SKILLS, rollRun, bossKindAt, MON, react, buildPower, pressure, showTitle, fusionOf2: fusionOf, setBiome, setGfx, saveCode, loadCode, showSettings, BIOMES, startTutorial, endTutorial, nextLoop, runSummary, checkAch, dailyList, BUF, AU, BOONS, gainBoon, afterStage, bn, sfx, get SAVE() { return SAVE; }, set SAVE(v) { SAVE = v; }, showLobby, showEnd, makeItem, equipItem, pickups, eqStats, commitRun, refreshShop, newSave, renderLobby };
   requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
 }
 // tải ảnh: nhân vật (IMG, dùng để tách lưỡi kiếm) + quái/boss (SPR). Bản một-file nhúng sẵn ảnh vào
 // window.SPRITE_DATA (xem build-standalone.py), bản thường thì đọc từ thư mục sprites/
-const jobs = [];
+// Tải ảnh 2 đợt: đợt 1 (nhân vật, quái, icon) đủ là vào game ngay; đợt 2 (Hỏa Long, Long Vương ~2 MB) tải ngầm,
+// boss chỉ xuất hiện khi đợt 2 đã xong (thường xong từ lâu trước màn 5).
+const jobs = [], later2 = [];
 for (const name in ANIMS) jobs.push([ANIMS[name].file, img => { IMG[name] = img; }]);
-for (const key in SHEETS) jobs.push([SHEETS[key].src, img => { SPR[key] = img; }]);
-let pending = jobs.length;
+for (const key in SHEETS) (/^(bt-|dlord)/.test(key) && key !== 'dlordd-idle' ? later2 : jobs).push([SHEETS[key].src, img => { SPR[key] = img; }]);
+let pending = jobs.length, pending2 = later2.length;
+window.bossArtReady = () => pending2 <= 0;
 const loadEl = document.getElementById('loading');
-for (const [file, put] of jobs) {
+loadEl.innerHTML = '<div class="lbox"><b>KIẾM SĨ BẤT TẬN</b><div class="lbar"><i id="lbarI"></i></div><span id="lpct">0%</span></div>';
+function loadImg(file, put, done) {
   const img = new Image();
-  img.onload = () => { put(img); pending--; if (loadEl.isConnected) loadEl.textContent = `Đang tải… ${jobs.length - pending}/${jobs.length}`; if (pending === 0) boot(); };
-  img.onerror = () => { loadEl.textContent = 'Không tải được sprites/' + file; };
+  img.onload = () => { put(img); done(); };
+  img.onerror = () => { const e = document.getElementById('lpct'); if (e) e.textContent = 'Không tải được sprites/' + file + ' · thử tải lại trang'; };
   img.src = (window.SPRITE_DATA && window.SPRITE_DATA[file]) || 'sprites/' + file;
 }
+for (const [file, put] of jobs) loadImg(file, put, () => {
+  pending--;
+  const p = Math.round((jobs.length - pending) / jobs.length * 100), i = document.getElementById('lbarI'), t = document.getElementById('lpct');
+  if (i) i.style.width = p + '%'; if (t) t.textContent = p + '%';
+  if (pending === 0) { boot(); for (const [f2, put2] of later2) loadImg(f2, put2, () => { pending2--; }); }
+});
 </script>
 </body>
 </html>
