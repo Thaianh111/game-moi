@@ -145,6 +145,17 @@ hồi đầy máu, thứ tự boss xáo lại). Mỗi vòng: máu quái +80%, t�
 Đủ 3 kỹ năng thì phần thưởng boss là nâng ★, hết kỹ năng để nâng thì chọn bùa. Chết là hết, màn kết thúc ghi vòng / màn đã tới
 và kỷ lục xa nhất.
 
+**Boss riêng của Vô Tận** (từ vòng 2): vòng 2 có 2 boss mới, vòng 3 có 3, các vòng sau ngẫu nhiên 2–4 boss mới, ưu tiên con
+chưa gặp trong lượt; còn lại lấy từ 4 boss cũ. Màn chọn thưởng vòng ghi tên boss mới sắp gặp. Boss mới làm từ hình quái
+có sẵn, phóng to 2,5–3,2 lần, đổi màu, có quầng sáng riêng; máu / đòn theo cùng công thức vị trí ra trận + vòng như boss cũ.
+
+| Boss | Hình | Đòn đánh | Cách đánh |
+|---|---|---|---|
+| **Vua Heo Rừng** | heo rừng vàng ×3,2 | Gồng rồi **húc** ngang đấu trường; đâm tường thì **choáng** 1,8 giây (sao vàng) và làm 3 tảng đá rơi; nhảy lên **dậm đất** tạo sóng chấn; gọi heo + heo bom | Nhảy qua khi nó húc, đánh lúc nó choáng; nhảy lên khi nó dậm |
+| **Ong Chúa Tối Thượng** | ong chúa tím ×3 | Bay cao; **quạt 7–9 kim**; **bổ nhào** theo vạch đỏ rồi nằm dưới đất gần 1 giây; dưới 50% máu **mưa kim** từ trời; gọi ong | Đánh lúc nó nằm dưới đất sau cú bổ nhào |
+| **Ảnh Chủ** | nhẫn giả tím đen ×2,5 | **Dịch chuyển ra sau lưng** rồi chém; nhảy lên **ném quạt 5–7 phi tiêu**; gọi 2 phân thân nhẫn giả | Lướt né ngay khi khói hiện sau lưng |
+| **Kiếm Thánh** | lãng khách đỏ ×2,5 | **Thế thủ**: chém trước mặt bị chặn và bị **phản đòn**; **sóng kiếm** chạy dọc sàn (2 sóng khi yếu); **rút kiếm** chém xuyên đấu trường theo vạch đỏ; chém thường; gọi lãng khách | Đánh sau lưng hoặc chờ hết thế thủ; nhảy / lên bục né sóng kiếm và rút kiếm (Kim Kiếm xuyên được thế thủ) |
+
 ## Cấp nhân vật, nhiệm vụ ngày, thành tựu, hào quang
 
 - **Cấp nhân vật:** hết trận được kinh nghiệm = quái × 2 + màn đã tới × 15 + boss × 60 (+200 nếu thắng). Mỗi cấp được 1
@@ -485,7 +496,7 @@ Chữ đuôi theo họ: Cửu Thiên Quyển (lốc), Phá Thiên Trảm (trăng
 `screenshot-lobby.png` (sảnh: tab Nhân vật, đủ 6 món), `screenshot-shop.png` (cửa hàng), `screenshot-gear-ingame.png`
 (vương miện, vòng ngọc bội, áo phủ màu trong trận), `screenshot-dashchain.png` (LƯỚT CHÉM ×3), `screenshot-dragon.png`
 (Phong Long), `screenshot-end-loot.png` (màn kết thúc có vàng + đồ nhặt được).
-`screenshot-tutorial.png` (hướng dẫn), `screenshot-biomes.png` (4 vùng đất), `screenshot-settings.png` (cài đặt + mã lưu), `screenshot-quests.png` (nhiệm vụ + thành tựu), `screenshot-level.png` (cấp + tiềm năng +
+`screenshot-tutorial.png` (hướng dẫn), `screenshot-biomes.png` (4 vùng đất), `screenshot-endless-bosses.png` (4 boss Vô Tận), `screenshot-settings.png` (cài đặt + mã lưu), `screenshot-quests.png` (nhiệm vụ + thành tựu), `screenshot-level.png` (cấp + tiềm năng +
 hào quang), `screenshot-endless.png` (Vô Tận vòng 2).
 
 Icon trang bị vẽ bằng code (`itemIcon`: kiếm, mũ, áo, găng, giày, ngọc bội theo màu hệ, viền theo độ hiếm).
