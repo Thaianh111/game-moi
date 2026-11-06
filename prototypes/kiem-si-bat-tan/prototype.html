@@ -1116,7 +1116,8 @@ function startDashSlash(chain) {
   fx.push({ type: 'streak', x: P.x, y: P.y - 24, face: P.face, len: P.dsChain === 3 ? 170 : 120, life: 0.24, max: 0.24, col: G.elem ? SKILLS[G.elem].col : '#ffffff' });
   dust(P.x - P.face * 8, P.y, 8, -P.face);
   if (P.dsChain > 1) fx.push({ type: 'label', x: P.x, y: P.y - 62, txt: P.dsChain === 3 ? 'LƯỚT CHÉM ×3!' : 'LƯỚT CHÉM ×2', col: P.dsChain === 3 ? '#ffd45a' : '#ffffff', life: 0.6, max: 0.6, size: P.dsChain === 3 ? 12 : 9 });
-  if (P.dsChain === 3) { fx.push({ type: 'xslash', x: P.x + P.face * 60, y: P.y - 30, w: 140, h: 80, face: P.face, life: 0.3, max: 0.3, k: 0 }); shake = Math.max(shake, 5); }
+  if (P.dsChain === 3) { fx.push({ type: 'xslash', x: P.x + P.face * 60, y: P.y - 30, w: 140, h: 80, face: P.face, life: 0.3, max: 0.3, k: 0 }); shake = Math.max(shake, 5);
+    pfxPlay('frame', P.x + P.face * 60, P.y - 30, { sc: 0.9, flip: P.face < 0, must: true }); pfxPlay('c_metal', P.x + P.face * 40, P.y + 4, { sc: 0.7, flip: P.face < 0, sp: 1.3 }); }
 }
 function gravityStep(dt, mul) { P.vy = Math.min(P.vy + T.gravity * (mul || 1) * dt, T.maxFall); }
 function airJumpOrWall() {
@@ -1299,7 +1300,7 @@ function updatePlayer(dt) {
     if (P.state === 'wall') P.state = 'move';
     if (P.slamPending && P.slamDown) { P.slamPending = P.slamDown = false; quakeBlast(1, null, true); }
     else if (has('quake') && P.impactVy > 470) quakeBlast(0.45, null, false);
-    if (P.state === 'move' && P.impactVy > 380) { sfx('land', 0.1); P.oneShot = 'land'; dust(P.x, P.y, 6, 0); }
+    if (P.state === 'move' && P.impactVy > 380) { sfx('land', 0.1); P.oneShot = 'land'; dust(P.x, P.y, 6, 0); if (P.impactVy > 560) pfxPlay('land', P.x, P.y, { sc: 0.45, sp: 1.4, gap: 0.3 }); }
   }
   // dung nham: chạm sàn là bỏng và bật lên
   if (G.lava.state === 'on' && P.onGround && P.ground && P.ground.floor && !P.dead) {
@@ -1321,11 +1322,11 @@ function hurtPlayer(d, fromX) {
   if (P.shieldT > 0) { fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 26, life: 0.2, max: 0.2, col: '#ffe07a' }); P.inv = 0.3; return; }
   if (P.parryT > 0) { parryCounter(); return; }
   if (P.wardN > 0) {   // Hộ Thân Phù
-    P.wardN--; P.inv = 0.7; sfx('block');
+    P.wardN--; P.inv = 0.7; sfx('block'); pfxPlay('block', P.x, P.y, { sc: 0.6, flip: P.x > fromX, sp: 1.3, must: true });
     fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 18, life: 0.35, max: 0.35, col: '#7fe0ff' }); pushNumbers(P, [{ v: 'CHẶN', crit: false }], 'block'); return;
   }
   if (has('shield') && P.blockCD <= 0) {
-    P.blockCD = 15 * (G.up.shield ? 0.7 : 1); P.inv = 0.7;
+    P.blockCD = 15 * (G.up.shield ? 0.7 : 1); P.inv = 0.7; pfxPlay('block', P.x, P.y, { sc: 0.6, flip: P.x > fromX, sp: 1.3, must: true });
     fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 18, life: 0.35, max: 0.35, col: '#ffe07a' });
     pushNumbers(P, [{ v: 'CHẶN', crit: false }], 'block'); sfx('block');
     shake = Math.max(shake, 3);
@@ -1343,6 +1344,7 @@ function hurtPlayer(d, fromX) {
   combo.hits = 0; combo.t = 0;
   shake = Math.max(shake, 5); hitstop = Math.max(hitstop, 0.05);
   pushNumbers(P, [{ v: d, crit: false }], 'hurt');
+  pfxPlay('hurt', P.x, P.y - 4, { sc: 0.5, sp: 1.3, gap: 0.2 });
   if (P.hp <= 0) {
     P.dead = true; P.state = 'dead'; playA('dead');
     G.endT = 2.6; G.won = false; G.pickNext = false;
@@ -1386,6 +1388,7 @@ function addPoison(t, n) {
 function lifeGain(h) {
   if (P.dead || P.hp >= P.maxHp) return;
   h = Math.min(h, P.maxHp - P.hp); P.hp += h;
+  if (h >= 8) pfxPlay('heal', P.x, P.y, { follow: P, sc: 0.75, sp: 1.3, gap: 0.8 });
   pushNumbers(P, [{ v: h, crit: false }], 'heal');
 }
 function healAcc(x) { P.hacc = (P.hacc || 0) + x; if (P.hacc >= 3) { P.hacc -= 3; lifeGain(3); } }
@@ -1497,11 +1500,13 @@ function meleeHit(at, c, dir) {
   const bx = boxOf(at), hx = clamp(P.x + dir * 26, bx[0], bx[1]), hy = (bx[2] + bx[3]) / 2;
   if (r.blocked) {
     fx.push({ type: 'ring', x: hx, y: hy, r: 5, life: 0.15, max: 0.15, col: '#cfd6e6' });
+    pfxPlay('block', hx, hy + 30, { sc: 0.45, flip: dir > 0, sp: 1.5, gap: 0.12 });
     for (let i = 0; i < 8; i++) { const a = rnd(-1.2, 1.2) + (dir > 0 ? Math.PI : 0); fx.push({ type: 'spark', x: hx, y: hy, vx: Math.cos(a) * 260, vy: Math.sin(a) * 260 - 80, life: 0.2, max: 0.3 }); }
     return;
   }
   fx.push({ type: 'slash', x: hx, y: hy, ang: ((c.kb && c.kb[1] > 200) ? 1.1 : (c.kb && c.kb[1] < -300) ? -1.0 : rnd(-0.4, 0.4)) * dir, len: 40 + (c.lines || 1) * 8, life: 0.13, max: 0.13 });
   fx.push({ type: 'ring', x: hx, y: hy, r: 6, life: 0.18, max: 0.18, col: anyCrit ? '#ff6b94' : '#ffffff' });
+  pfxHit(hx, hy, dir, anyCrit, G.elem);
   for (let i = 0; i < 7 + (c.lines || 1) * 2; i++) {
     const a = rnd(-0.9, 0.9) + (dir > 0 ? 0 : Math.PI), sp = rnd(160, 420);
     fx.push({ type: 'spark', x: hx, y: hy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, life: rnd(0.15, 0.3), max: 0.3 });
@@ -1577,6 +1582,7 @@ function kill(t) {
   if (isBig(t)) { bossDie(); return; }
   const [cx, cy] = centerOf(t);
   explode(cx, cy, 0.7 * t.sc);
+  pfxKill(t, cx, cy);
   G.kills++; G.killCount++;
   G.energy = Math.min(100, G.energy + 3 * enMul());
   G.score += MTYPE[t.kind].score * (t.elite ? 3 : 1) * mult();
@@ -1653,7 +1659,7 @@ function trySkill(i) {
 }
 // tung chiêu: vòng sáng + tia màu kỹ năng + tên chiêu bay lên trên đầu
 function castFx(k) {
-  sfx('cast');
+  sfx('cast'); pfxCast(k);
   const s = SKILLS[k], cy = P.y - 24;
   fx.push({ type: 'ring', x: P.x, y: cy, r: 10, life: 0.3, max: 0.3, col: s.col, grow: 240 });
   fx.push({ type: 'flare', x: P.x, y: cy, r: 46, life: 0.22, max: 0.22, col: hexRgb(s.col) });
@@ -1877,6 +1883,8 @@ function react(t, els, at) {
   fx.push({ type: 'flare', x, y, r: 52, life: 0.25, max: 0.25, col: hexRgb(REACT[r].col) });
   G.energy = Math.min(100, G.energy + 4);
   shake = Math.max(shake, 4);
+  { const nm = { shock: 'r_shock', freeze: 'r_freeze', toxic: 'r_toxic', blaze: 'c_fire', steam: 'c_water', mud: 'c_earth' }[r], sc = big ? 0.8 : 0.55;
+    if (nm === 'r_shock') pfxPlay(nm, x, y, { sc, sp: 1.2 }); else pfxPlay(nm, x, b[3], { sc, sp: 1.5 }); }
   switch (r) {
     case 'shock':   // điện lan khắp vũng nước
       t.wet = 0;
@@ -2179,7 +2187,7 @@ const CAST3 = {
 };
 // Phản Kích: thế thủ chặn đòn rồi chém trả
 function parryCounter() {
-  P.parryT = 0; P.inv = 0.6;
+  P.parryT = 0; P.inv = 0.6; pfxPlay('parry', P.x, P.y, { sc: 0.85, flip: P.face < 0, sp: 1.2, must: true });
   fx.push({ type: 'label', x: P.x, y: P.y - 66, txt: 'PHẢN KÍCH!', col: '#a0d8ff', life: 0.8, max: 0.8, size: 12 });
   fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 12, life: 0.35, max: 0.35, col: '#e0f4ff', grow: 380 });
   fx.push({ type: 'flare', x: P.x, y: P.y - 24, r: 110, life: 0.3, max: 0.3, col: '160,216,255' });
@@ -2343,6 +2351,9 @@ function tryFusion() {
   G.energy = 0; G.slotPop[3] = 1; sfx('fusion', 0.2); G.rs.fus++; if (fu.tier === 3) G.rs.tri++;
   G.flash = 0.4; G.flashC = '255,230,160'; shake = Math.max(shake, 8); hitstop = Math.max(hitstop, 0.12);
   G.fuBanner = 1.8; G.fuName = fu.name; G.fuTier = fu.tier || 2;
+  pfxPlay('frame', P.x, P.y - 40, { sc: 1.5, must: true });
+  if ((fu.tier || 2) === 3) pfxPlay('tri', P.x, P.y - 30, { sc: 1.1, sp: 1.2, must: true });
+  else pfxPlay('fusion', P.x, P.y, { sc: 0.9, sp: 1.3, must: true });
   fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 10, life: 0.5, max: 0.5, col: '#ffe08a', grow: 420 });
   FUCAST[fu.kind](fu);
 }
@@ -2857,6 +2868,7 @@ const AI = {
 function bombBlast(m, hurtsPlayer) {
   const cx = m.x, cy = m.y - 10 * m.sc, R = 52 * m.sc;
   explode(cx, cy, 1.4 * m.sc); shake = Math.max(shake, 7);
+  pfxPlay('bomb', cx, m.y, { sc: 0.5 * m.sc, sp: 1.8, gap: 0.06 });
   fx.push({ type: 'ring', x: cx, y: cy, r: 10, life: 0.3, max: 0.3, col: '#ffb35c', grow: 260 });
   for (const o of mons) {
     if (o.dead || o === m) continue;
@@ -3034,6 +3046,7 @@ function bossDie() {
   const b = boss;
   { const [bx, by] = centerOf(b); dropLoot(bx, by, 80 * (1 + (G.bossLv || 0)), makeItem(SLOTS[Math.floor(Math.random() * 6)][0], rollRarity(0.8 + (G.bossLv || 0) * 0.5))); }
   b.state = 'dying'; b.st = 0; b.boomT = 0;
+  { const [bx] = centerOf(b); pfxPlay('bossdie', bx, FLOOR, { sc: 1.15, sp: 1.25, must: true }); later(0.5, () => pfxPlay('frame', bx, FLOOR - 120, { sc: 1.4, must: true })); }
   if (b.kind === 'beast') b.anim = bAnim('bt-death', 16);
   if (b.kind === 'lord') lAnim(b, 'death', 0, 35, 16);
   G.phase = 'bossdead'; G.lava.state = 'off';
@@ -3568,7 +3581,70 @@ function explode(x, y, size) {
   }
   for (let i = 0; i < 3 * size; i++) fx.push({ type: 'smoke', x: x + rnd(-10, 10) * size, y: y + rnd(-10, 10) * size, vx: rnd(-20, 20), vy: rnd(-50, -20), r: rnd(6, 12) * size, life: rnd(0.6, 1.0), max: 1.0 });
 }
+// ============ Hiệu ứng pixel (pixelfx: github.com/patch-gg/pixelfx, MIT) ============
+// Hiệu ứng được nướng sẵn thành sprite sheet trong sprites/pfx/ bằng bake-pfx.mjs. Ảnh tải ngầm sau khi vào game;
+// chưa tải xong thì pfxPlay() bỏ qua, game vẫn chạy với hạt hiệu ứng cũ. Vẽ nét pixel (không làm mịn).
+// PFX_META_BEGIN (tạo bởi bake-pfx.mjs, đừng sửa tay)
+const PFX_META = {"hit":{"w":136,"h":80,"n":13,"c":3,"f":24,"px":44,"py":64},"crit":{"w":216,"h":136,"n":23,"c":4,"f":24,"px":84,"py":106},"hurt":{"w":128,"h":88,"n":19,"c":4,"f":20,"px":64,"py":72},"block":{"w":148,"h":104,"n":23,"c":5,"f":20,"px":40,"py":88},"parry":{"w":200,"h":112,"n":21,"c":4,"f":20,"px":100,"py":96},"frame":{"w":320,"h":180,"n":7,"c":2,"f":20,"px":160,"py":90},"land":{"w":176,"h":80,"n":27,"c":4,"f":16,"px":88,"py":60},"kill":{"w":112,"h":92,"n":27,"c":5,"f":16,"px":56,"py":80},"elite":{"w":96,"h":140,"n":39,"c":8,"f":12,"px":48,"py":126},"bomb":{"w":260,"h":240,"n":44,"c":7,"f":12,"px":130,"py":206},"bossdie":{"w":360,"h":300,"n":73,"c":8,"f":10,"px":180,"py":262},"win":{"w":240,"h":248,"n":44,"c":7,"f":12,"px":120,"py":100},"fusion":{"w":208,"h":150,"n":30,"c":5,"f":16,"px":104,"py":124},"tri":{"w":224,"h":200,"n":28,"c":5,"f":16,"px":112,"py":100},"cast":{"w":208,"h":150,"n":30,"c":5,"f":16,"px":104,"py":124},"heal":{"w":80,"h":104,"n":28,"c":7,"f":14,"px":40,"py":92},"level":{"w":176,"h":138,"n":46,"c":7,"f":14,"px":88,"py":114},"coin":{"w":112,"h":108,"n":23,"c":5,"f":16,"px":56,"py":94},"item":{"w":112,"h":108,"n":23,"c":5,"f":16,"px":56,"py":94},"loop":{"w":200,"h":220,"n":48,"c":8,"f":12,"px":100,"py":192},"c_fire":{"w":224,"h":128,"n":48,"c":6,"f":12,"px":112,"py":92},"c_bolt":{"w":288,"h":156,"n":28,"c":4,"f":14,"px":144,"py":124},"c_ice":{"w":140,"h":120,"n":46,"c":7,"f":14,"px":70,"py":106},"c_wave":{"w":208,"h":150,"n":30,"c":5,"f":16,"px":104,"py":124},"c_poison":{"w":184,"h":116,"n":40,"c":6,"f":14,"px":92,"py":100},"c_light":{"w":224,"h":176,"n":40,"c":6,"f":14,"px":112,"py":148},"c_blood":{"w":208,"h":150,"n":30,"c":5,"f":16,"px":104,"py":124},"c_shadow":{"w":112,"h":124,"n":42,"c":7,"f":12,"px":56,"py":108},"c_water":{"w":176,"h":100,"n":36,"c":5,"f":14,"px":88,"py":78},"c_wood":{"w":124,"h":120,"n":41,"c":7,"f":12,"px":62,"py":108},"c_earth":{"w":288,"h":104,"n":44,"c":4,"f":14,"px":144,"py":88},"c_metal":{"w":208,"h":104,"n":17,"c":3,"f":20,"px":104,"py":84},"r_shock":{"w":144,"h":112,"n":19,"c":4,"f":20,"px":76,"py":56},"r_freeze":{"w":224,"h":112,"n":40,"c":5,"f":14,"px":68,"py":90},"r_toxic":{"w":212,"h":132,"n":46,"c":6,"f":14,"px":106,"py":118},"hit_fire":{"w":136,"h":80,"n":13,"c":3,"f":24,"px":44,"py":64},"hit_bolt":{"w":136,"h":80,"n":13,"c":3,"f":24,"px":44,"py":64},"hit_ice":{"w":136,"h":80,"n":13,"c":3,"f":24,"px":44,"py":64},"hit_wave":{"w":136,"h":80,"n":13,"c":3,"f":24,"px":44,"py":64},"hit_poison":{"w":136,"h":80,"n":13,"c":3,"f":24,"px":44,"py":64},"hit_light":{"w":136,"h":80,"n":13,"c":3,"f":24,"px":44,"py":64},"hit_blood":{"w":136,"h":80,"n":13,"c":3,"f":24,"px":44,"py":64},"hit_shadow":{"w":136,"h":80,"n":13,"c":3,"f":24,"px":44,"py":64},"hit_water":{"w":136,"h":80,"n":13,"c":3,"f":24,"px":44,"py":64},"hit_wood":{"w":136,"h":80,"n":13,"c":3,"f":24,"px":44,"py":64},"hit_earth":{"w":136,"h":80,"n":13,"c":3,"f":24,"px":44,"py":64},"hit_metal":{"w":136,"h":80,"n":13,"c":3,"f":24,"px":44,"py":64}};
+// PFX_META_END
+const PFX_IMG = {}, pfx = [], pfxLast = {};
+let pfxClock = 0;
+// Vô Tận càng về sau quái càng đông: giới hạn số hiệu ứng cùng lúc để máy yếu không giật.
+// Hiệu ứng "must" (boss chết, hợp kích...) luôn được chen vào, đẩy cái cũ nhất ra.
+function pfxCap() { return G.lowFx ? 12 : 36; }
+// pfxPlay(tên, x, y, { sc: cỡ, sp: tốc độ phát, flip: quay trái, gap: giây tối thiểu giữa 2 lần cùng loại,
+//   must: luôn phát, follow: bám theo đối tượng (x, y), dy: lệch dọc khi bám, a: độ mờ })
+function pfxPlay(name, x, y, o) {
+  o = o || {};
+  const m = PFX_META[name], img = PFX_IMG[name];
+  if (!m || !img) return null;
+  if (o.gap && pfxClock - (pfxLast[name] ?? -99) < o.gap) return null;
+  if (pfx.length >= pfxCap()) { if (!o.must) return null; pfx.splice(pfx.findIndex(e => !e.must) >>> 0, 1); }
+  pfxLast[name] = pfxClock;
+  const e = { m, img, x, y, t: 0, sp: o.sp || 1, sc: o.sc || 1, flip: o.flip ? -1 : 1, a: o.a ?? 1, must: !!o.must, follow: o.follow || null, dy: o.dy || 0 };
+  pfx.push(e);
+  return e;
+}
+function updatePfx(dt) {
+  pfxClock += dt;
+  if (hitstop > 0) return;   // khựng hình: hiệu ứng đứng yên ở khung sáng nhất, đòn đánh "ăn" hơn
+  for (let i = pfx.length - 1; i >= 0; i--) {
+    const e = pfx[i];
+    e.t += dt * e.sp;
+    if (e.follow) { e.x = e.follow.x; e.y = e.follow.y + e.dy; }
+    if (e.t * e.m.f >= e.m.n) pfx.splice(i, 1);
+  }
+}
+function drawPfx() {
+  if (!pfx.length) return;
+  ctx.save(); ctx.imageSmoothingEnabled = false;
+  for (const e of pfx) {
+    const m = e.m, fi = Math.min(m.n - 1, Math.floor(e.t * m.f));
+    ctx.globalAlpha = e.a;
+    ctx.save(); ctx.translate(e.x, e.y); ctx.scale(e.flip * e.sc, e.sc);
+    ctx.drawImage(e.img, (fi % m.c) * m.w, Math.floor(fi / m.c) * m.h, m.w, m.h, -m.px, -m.py, m.w, m.h);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+// --- các lúc dùng trong game ---
+// chém trúng: tia lửa theo màu kiếm nguyên tố; chí mạng thêm vụ nổ sáng
+function pfxHit(x, y, dir, crit, elem) {
+  const nm = elem && PFX_META['hit_' + elem] ? 'hit_' + elem : 'hit';
+  pfxPlay(nm, x, y + 14, { sc: 0.7, flip: dir < 0, sp: 1.2, gap: 0.03 });
+  if (crit) pfxPlay('crit', x, y + 16, { sc: 0.62, flip: dir < 0, sp: 1.1, gap: 0.08 });
+}
+function pfxKill(t, cx, cy) {
+  if (t.elite) pfxPlay('elite', t.x, t.y, { sc: 0.8 * (t.sc || 1), sp: 1.6, gap: 0.1 });
+  pfxPlay('kill', cx, cy + 22 * (t.sc || 1), { sc: 0.62 * (t.sc || 1), sp: 1.7, gap: 0.04 });
+}
+function pfxCast(k) {
+  const s = SKILLS[k], nm = s && s.elem && PFX_META['c_' + k] ? 'c_' + k : 'cast';
+  const big = { c_fire: [0.75, 1.6], c_bolt: [0.7, 1.4], c_earth: [0.75, 1.4], c_light: [0.6, 1.3], c_shadow: [0.75, 1.5], c_water: [0.7, 1.4] }[nm] || [0.6, 1.4];
+  pfxPlay(nm, P.x, nm === 'cast' || nm === 'c_wave' || nm === 'c_blood' || nm === 'c_ice' || nm === 'c_metal' ? P.y - 6 : P.y, { sc: big[0], sp: big[1], flip: P.face < 0, must: true });
+}
 function updateFx(dt) {
+  updatePfx(dt);
   if (hitstop <= 0) swordFx(dt);
   for (let i = fx.length - 1; i >= 0; i--) {
     const p = fx[i]; p.life -= dt;
@@ -4790,6 +4866,7 @@ function render(time) {
   drawOrbs(time);
   drawPickups(time);
   drawFx();
+  drawPfx();
   drawNumbers();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   drawFog();
@@ -4906,7 +4983,7 @@ function showEnd(won) {
 }
 function resetGame() {
   G.eq = eqStats(G.char); G.look = lookOf(G.char); P.maxHp = Math.round(100 + G.eq.hp); pickups.length = 0;
-  mons.length = 0; orbs.length = 0; shots.length = 0; meteors.length = 0; fx.length = 0; nums.length = 0; timers.length = 0;
+  mons.length = 0; orbs.length = 0; shots.length = 0; meteors.length = 0; fx.length = 0; pfx.length = 0; nums.length = 0; timers.length = 0;
   vortices.length = 0; swords.length = 0; pillars.length = 0; zones.length = 0; pets.length = 0; ghosts.length = 0; boss = null;
   layoutIdx = 0; buildLevel();
   Object.assign(P, { x: AW * 0.5, y: FLOOR, vx: 0, vy: 0, face: 1, state: 'move', h: 46, hp: P.maxHp, inv: 0, hurtT: 0, hurtFlash: 0,
@@ -5165,9 +5242,9 @@ function updatePickups(dt) {
       p.x += dx / d * Math.min(d, sp * dt); p.y += dy / d * Math.min(d, sp * dt);
       if (d < 16) {
         pickups.splice(i, 1);
-        if (p.kind === 'coin') { G.gold += p.val; sfx('coin', 0.06); fx.push({ type: 'spark', x: p.x, y: p.y, vx: 0, vy: -60, life: 0.2, max: 0.3, col: '#ffe08a' }); }
+        if (p.kind === 'coin') { G.gold += p.val; sfx('coin', 0.06); pfxPlay('coin', P.x, P.y - 8, { sc: 0.4, sp: 1.7, gap: 0.15 }); fx.push({ type: 'spark', x: p.x, y: p.y, vx: 0, vy: -60, life: 0.2, max: 0.3, col: '#ffe08a' }); }
         else {
-          G.loot.push(p.item); sfx('item');
+          G.loot.push(p.item); sfx('item'); pfxPlay('item', P.x, P.y - 4, { sc: 0.75, sp: 1.2, must: true });
           const R = RARITY[p.item.rar];
           fx.push({ type: 'label', x: P.x, y: P.y - 72, txt: `+ ${p.item.name} (${R.name})`, col: R.col, life: 1.6, max: 1.6, size: 10 });
           fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 10, life: 0.4, max: 0.4, col: R.col, grow: 240 });
@@ -5551,6 +5628,7 @@ const BOONS = {
 const bn = k => (G.boons && G.boons[k]) || 0;
 function gainBoon(k) {
   G.boons[k] = bn(k) + 1;
+  pfxPlay('level', P.x, P.y, { follow: P, sc: 0.6, sp: 1.2, must: true });
   const st = BOONS[k].stat;
   if (st) for (const s in st) {
     G.eq[s] = (G.eq[s] || 0) + st[s];
@@ -5795,6 +5873,8 @@ function runSummary(won) {
 // ============ Chế độ Vô Tận: hết màn 20 sang vòng sau, mọi thứ mạnh hơn ============
 function nextLoop() {
   G.loop = (G.loop || 0) + 1;
+  pfxPlay('win', AW / 2, FLOOR - 150, { sc: 1.2, must: true }); later(0.35, () => pfxPlay('win', AW * 0.3, FLOOR - 120, { sc: 0.9, must: true }));
+  pfxPlay('loop', P.x, P.y, { follow: P, sc: 0.7, sp: 1.3, must: true });
   rollRun(); P.hp = P.maxHp;
   const nb = G.bossOrder.filter(k => NEW_BOSSES.includes(k)).map(k => BOSSES[k].name);
   showChoice(`VÒNG ${G.loop + 1}`, 'Quái máu ×' + (1 + 0.8 * G.loop).toFixed(1) + (nb.length ? ` · Boss mới: ${nb.join(', ')}` : '') + '. Chọn 1 phần thưởng vòng:',
@@ -6338,7 +6418,8 @@ for (const [file, put] of jobs) loadImg(file, put, () => {
   pending--;
   const p = Math.round((jobs.length - pending) / jobs.length * 100), i = document.getElementById('lbarI'), t = document.getElementById('lpct');
   if (i) i.style.width = p + '%'; if (t) t.textContent = p + '%';
-  if (pending === 0) { boot(); for (const [f2, put2] of later2) loadImg(f2, put2, () => { pending2--; }); }
+  if (pending === 0) { boot(); for (const [f2, put2] of later2) loadImg(f2, put2, () => { pending2--; });
+    for (const k in PFX_META) { const im = new Image(); im.onload = () => { PFX_IMG[k] = im; }; im.src = assetURL('pfx/' + k + '.png'); } }
 });
 </script>
 </body>

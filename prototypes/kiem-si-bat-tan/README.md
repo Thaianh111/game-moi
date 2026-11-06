@@ -77,6 +77,35 @@ Ngón bấm lăn được giữa Chém/Nhảy/Lướt mà không cần nhấc ta
 lướt, tốc độ chém, khựng hình, thời gian hồi chiêu, tốc độ quái, sát thương quái, cỡ nút). Giá trị được
 nhớ trong trình duyệt. Kéo "Sát thương quái" về 0 là bất tử để thử.
 
+## Hiệu ứng pixel (pixelfx)
+
+![Hiệu ứng pixelfx](screenshot-pixelfx.png)
+
+47 hiệu ứng pixel art từ thư viện **pixelfx** (github.com/patch-gg/pixelfx, MIT, của patch-gg), nướng sẵn thành sprite
+sheet trong `sprites/pfx/` (~1,5 MB, PNG 256 màu). Ảnh tải ngầm sau khi vào game; chưa tải xong thì game vẫn chạy với hạt cũ.
+Hiệu ứng đứng yên trong lúc khựng hình nên đòn đánh "ăn" hơn.
+
+| Lúc | Hiệu ứng |
+|---|---|
+| Chém trúng | tia lửa theo **màu kiếm nguyên tố** (12 màu: lửa, sét, băng, độc, quang, huyết, ám, thủy, mộc, thổ, kim, kiếm khí) |
+| Chí mạng | vụ nổ sáng hình sao |
+| Bị đỡ đòn (Ốc Giáp, Lãng Khách) | khiên chặn |
+| Quái chết / tinh anh chết | làn khói "pụp" / hồn vàng bay lên |
+| Heo Bom nổ | nổ đất |
+| Tung chiêu kiếm nguyên tố | mỗi hệ một kiểu: vòng lửa, sấm nổ, bông tuyết, axit, sét trời, lời nguyền, nước bắn, hoa nở, động đất, xoáy kiếm vàng... |
+| Phản ứng nguyên tố | điện giật, băng vỡ, nổ bào tử độc, bùng cháy, hơi nước, bùn lầy |
+| Lướt chém ×3, Hợp Kích, Tam Hợp | khung va chạm toàn màn + bùng năng lượng vàng / nổ plasma |
+| Boss chết | vụ nổ lớn hình nấm |
+| Sang vòng Vô Tận | pháo hoa + vòng phép dưới chân |
+| Bị đánh, chặn đòn, phản kích, tiếp đất mạnh, hồi máu, nhặt vàng / đồ, nhận bùa | va đập đỏ, khiên, phản đòn, sóng bụi, ánh hồi máu, lóe vàng, cột sáng lên cấp |
+
+**Cho chế độ Vô Tận:** càng về sau quái càng đông, nên tối đa 36 hiệu ứng cùng lúc (đồ họa Nhẹ: 12), mỗi loại có khoảng nghỉ
+tối thiểu; hiệu ứng quan trọng (boss chết, hợp kích, chiêu) luôn được chen vào.
+
+**Đổi / thêm hiệu ứng:** `git clone https://github.com/patch-gg/pixelfx` cạnh repo, sửa bảng `LIST` trong `bake-pfx.mjs`
+(tên, hiệu ứng, fps, màu), chạy `node bake-pfx.mjs` (cần Node + Python có Pillow), rồi `build-standalone.py` và `build-pwa.py`.
+Gắn vào game bằng `pfxPlay('tên', x, y, { sc, sp, flip, gap, must, follow })`.
+
 ## Âm thanh và nhạc
 
 **Âm thanh thật:** tiếng trúng đòn, chí mạng, quái chết, nổ, lướt, bị đánh, chạm đất, nhặt vàng / đồ, bấm nút, chọn bùa,
