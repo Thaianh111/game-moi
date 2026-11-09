@@ -12,7 +12,7 @@ Bản thử dùng một lần rồi bỏ. Không đem code này vào game thật
 PROCEED thì viết lại từ đầu.
 
 Bản thử đã đi qua bước 1 đến 4 trong mục "Thứ tự làm" của `game-brief.md` (di chuyển và combo,
-quái và đợt, boss đổi địa hình, chọn skill). Ngoài brief còn có: 4 nhân vật chọn được, lướt chém,
+quái và đợt, boss đổi địa hình, chọn skill). Ngoài brief còn có: 5 nhân vật chọn được (thêm **Cô Út**, thợ máy miền Tây vung cờ lê), lướt chém,
 40 kỹ năng khác hẳn nhau (12 nguyên tố có phản ứng chéo), Hợp Kích 2 kỹ năng và Tam Hợp Kích 3 kỹ năng,
 nâng cấp ★, 4 boss, 20 màn, màn tiêu đề, **sảnh chính với 6 ô trang bị** (rơi từ quái / boss, mua, nâng cấp, đổi ngoại hình)
 và **lướt + đánh** (lướt hủy đòn, chuỗi lướt chém 3 lần). **Có âm thanh + nhạc**, **chọn bùa sau mỗi màn** và **ngã rẽ**
@@ -537,3 +537,12 @@ dùng chung với màn tiêu đề).
 ## Kết luận
 
 _(Điền sau khi chơi thử.)_
+
+## Cô Út (nhân vật thứ 5)
+
+Thợ máy miền Tây: nón lá đeo sau lưng, khăn rằn, áo bà ba xanh, cầm cờ lê. Ảnh gốc do Võ Thái Anh tạo; sprite
+`sprites/chars/cout-*.png` (khung 128x128, cùng kiểu với Samurai / Ninja / Võ Sĩ) được dựng từ một ảnh đứng bằng cách
+nghiêng thân, đưa chân, co giãn và xoay (idle 6, run 8, jump 12, attack1-3 mỗi đòn 4, hurt 2, dead 7 khung).
+Chỉ số: chạy +8%, tốc đánh +15%, lướt +10%, chí mạng +8%, sát thương -5%.
+
+![Cô Út ở sảnh](screenshot-cout-lobby.png)
