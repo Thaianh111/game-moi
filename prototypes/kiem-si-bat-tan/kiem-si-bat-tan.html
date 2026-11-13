@@ -1078,6 +1078,7 @@ function startDash(dir) {
   P.state = 'dash'; P.dashT = T.dashTime; if (dir) P.face = dir; P.h = 26; P.oneShot = null;
   if (P.hasteT > 0) newSwing();
   playA('dash'); sfx('dash');
+  tryBlink();
   dust(P.x - P.face * 8, P.y, 6, -P.face);
   if (bn('firedash') && P.onGround) { const d = dashSpeed() * T.dashTime, x1 = clamp(P.x + P.face * d, WALL + 6, AW - WALL - 6); zones.push({ kind: 'flame', x0: Math.min(P.x, x1), x1: Math.max(P.x, x1), y: P.y, life: 2 + bn('firedash') * 0.5, max: 2, tick: 0.2 }); }
   if (has('knife')) for (const vy of [-70, 0, 70]) shots.push({ kind: 'knife', x: P.x + P.face * 12, y: P.y - 26, vx: P.face * 620, vy, dir: P.face, life: 0.6, max: 0.6, hit: new Set(), dmg: [600, 820], lines: 1, mul: um('knife') });
@@ -1278,6 +1279,7 @@ function updatePlayer(dt) {
   P.shieldT -= dt; P.blockCD -= dt; P.spin -= dt; P.dsWin -= dt;
   if (P.onGround) { P.coyote = T.coyote; P.airSwings = 0; P.airJumps = CH.airJumps; if (P.state !== 'dash') P.dashJump = false; }
   carry(P);
+  if (G.dodge) { buf.attack = 0; buf.sk1 = buf.sk2 = buf.sk3 = buf.fu = 0; }   // Màn Né Tránh: không đánh, không chiêu
   if (!P.dead && P.state !== 'hurt') {
     for (let i = 0; i < 3; i++) if (buf['sk' + (i + 1)] > 0) { buf['sk' + (i + 1)] = 0; trySkill(i); }
     if (buf.fu > 0) { buf.fu = 0; tryFusion(); }
@@ -1338,7 +1340,8 @@ function hurtPlayer(d, fromX) {
     shake = Math.max(shake, 3);
     return;
   }
-  d = Math.round(d * T.monDmg * (has('earth') ? 0.75 : 1) * (1 - Math.min(0.6, (G.eq ? G.eq.def : 0) / 100))); if (d <= 0) return;
+  d = Math.round(d * T.monDmg * (has('earth') ? 0.75 : 1) * (1 - Math.min(0.6, (G.eq ? G.eq.def : 0) / 100)));
+  if (G.dodge) d = dodgeHurt(d); else if (d <= 0) return;
   P.calmT = 0;
   if (has('parry')) later(0.1, () => { if (!P.dead) { fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 10, life: 0.25, max: 0.25, col: '#a0d8ff', grow: 300 }); areaHit(P.x, P.y - 24, 75, { dmg: [700, 950], lines: 2, mul: um('parry'), kb: [220, -200], stun: 0.5, style: 'norm' }); } });
   sfx('hurt');
@@ -1351,6 +1354,8 @@ function hurtPlayer(d, fromX) {
   shake = Math.max(shake, 5); hitstop = Math.max(hitstop, 0.05);
   pushNumbers(P, [{ v: d, crit: false }], 'hurt');
   pfxPlay('hurt', P.x, P.y - 4, { sc: 0.5, sp: 1.3, gap: 0.2 });
+  if (P.hp <= 0 && tryRevive()) return;
+  tryStopTime();
   if (P.hp <= 0) {
     P.dead = true; P.state = 'dead'; playA('dead');
     G.endT = 2.6; G.won = false; G.pickNext = false;
@@ -1364,6 +1369,7 @@ function dmgBonus() {
   if (has('blood')) b *= 1 + 0.6 * (1 - P.hp / P.maxHp);
   if (P.rageT > 0) b *= G.up.blood ? 1.55 : 1.4;
   if (G.eq) b *= 1 + G.eq.atk / 100;
+  if (hid('berserk') && P.hp < P.maxHp * 0.3) b *= 2;
   return b;
 }
 function rollDamage(range, lines, mul, forceCrit) {
@@ -1445,6 +1451,7 @@ function applyHit(at, s, dir, melee) {
     P.lsCount = 0;
     if (!P.dead && P.hp < P.maxHp) { const h = Math.min(4, P.maxHp - P.hp); P.hp += h; pushNumbers(P, [{ v: h, crit: false }], 'heal'); }
   }
+  if (melee && hid('soul') && !blocked) healAcc(0.5);
   dealDamage(t, vals, style, at);
   return { vals, blocked };
 }
@@ -2481,6 +2488,7 @@ function updatePassives(dt) {
   }
   if (P.hasteT > 0 && Math.random() < dt * 18 && P.anim) P.trail.push({ name: P.anim.name, f: Math.floor(P.anim.f), x: P.x, y: P.y, face: P.face, life: 0.18 });
   gearTick(dt);
+  hiddenTick(dt);
   // Linh Tuyền: yên ổn 4 giây thì hồi máu; Suối Hồi Sinh hồi 10 máu/giây
   P.calmT += dt;
   if (has('heal') && P.calmT > 4 && !P.dead && P.hp < P.maxHp) {
@@ -3460,7 +3468,7 @@ function introOf(i) {
 
 // ============ Luồng chơi: 20 màn (boss ở màn 5, 10, 15, 20) ============
 function startStage(i) {
-  G.stage = i; G.pt = 0; G.marks.length = 0;
+  G.stage = i; G.pt = 0; G.marks.length = 0; G.stopUsed = false; G.dodge = null; holes.length = 0;
   const st = STAGES[i];
   setBiome(biomeOf(i)); G.hzT = 4;
   const L = G.stageLayout[i]; if (L !== undefined && L !== layoutIdx) rearrangeTo(L);
@@ -3501,6 +3509,7 @@ function updateGame(dt) {
   for (const k in G.cd) G.cd[k] = Math.max(0, G.cd[k] - dt);
   G.fuBanner = Math.max(0, G.fuBanner - dt);
   updatePassives(dt);
+  if (G.dodge) { dodgeUpdate(dt); return; }
   if (G.tut) { tutUpdate(dt); return; }
   const st = STAGES[G.stage];
   if (!st.boss) {
@@ -4734,8 +4743,11 @@ function drawHud() {
   ctx.font = '600 11px system-ui, sans-serif'; ctx.fillStyle = '#ffe08a';
   ctx.fillText(`${CH.name} · ${G.score.toLocaleString('vi-VN')} · 🪙${G.gold}`, sl + 3, 42);
   G.skills.forEach((k, i) => drawIcon(k, sl + 140 + i * 17, 42, 7.5));
+  const hk = Object.keys(G.hid || {});
+  if (hk.length) { ctx.font = '11px ' + EMOJI_FONT; ctx.textAlign = 'left'; ctx.fillText(hk.map(k => HIDDEN[k].emoji).join(''), sl + 3, 66); }
   const st = STAGES[G.stage];
-  if (st && st.boss && (boss || G.phase === 'bossdead') && G.phase !== 'warning') {
+  if (G.dodge && G.mode === 'play') drawDodgeHud();
+  else if (st && st.boss && (boss || G.phase === 'bossdead') && G.phase !== 'warning') {
     const w = Math.min(340, cssW * 0.42), x = (cssW - w) / 2, y = 22;
     const ratio = boss ? Math.max(0, boss.hp / boss.maxHp) * G.bossBar : 0;
     ctx.fillStyle = 'rgba(8,11,20,.65)'; rr(ctx, x - 6, 6, w + 12, 30, 8); ctx.fill();
@@ -4844,6 +4856,7 @@ function render(time) {
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   for (const p of plats) drawPlat(p);
   drawMarks(time);
+  if (G.dodge) drawDodgeWarns();
   drawLava(time);
   if (boss && boss.kind === 'beast') drawBeast(boss, time);
   if (boss && boss.kind === 'lord') drawLord(boss, time);
@@ -4853,6 +4866,7 @@ function render(time) {
   if (boss && boss.kind === 'boss') drawBoss(boss, time);
   if (boss && boss.kind === 'giant') drawGiant(boss, time);
   drawVortices(time);
+  drawHoles(time);
   drawShots();
   drawZones(time);
   drawTimeAura(time);
@@ -4883,6 +4897,7 @@ function render(time) {
     if (G.phase === 'banner') { const it = introOf(G.stage); drawBanner(`MÀN ${G.stage + 1}`, `Diệt hết ${G.total} quái` + (G.pr > 1 ? ` · Áp lực ×${G.pr.toFixed(1)}` : ''), it, G.pt, it ? 2.4 : 1.6, '#ffb35c'); }
     if (G.phase === 'clear') drawBanner('HOÀN THÀNH!', STAGES[G.stage + 1] && STAGES[G.stage + 1].boss ? 'Chuẩn bị… có thứ gì đó đang đến' : 'Hồi 25 máu', '', G.pt, 2.2, '#8ef0a8');
     if (G.phase === 'warning') drawWarning(G.pt);
+    if (G.dodge) drawDodgeBanner();
     drawNameCard(G.nameT);
     drawControls();
     if (G.tut) tutDraw();
@@ -4981,6 +4996,7 @@ function showEnd(won) {
     `${CH.name} · ${won ? 'Hạ cả 4 boss, xong 20 màn' : G.endless ? `Vô Tận: vòng ${G.loop + 1}, màn ${G.stage + 1}/20` : `Dừng ở màn ${G.stage + 1}/20`} · ${G.kills} quái · ${m}:${String(s).padStart(2, '0')}<br>` +
     `Kỹ năng: ${G.skills.map(k => SKILLS[k].emoji + ' ' + SKILLS[k].name + (G.up[k] ? ' ★' : '')).join(', ') || '—'}<br>` +
     `Boss lần này: ${G.bossOrder.map(k => BOSSES[k].name).join(' → ')}<br>` +
+    (Object.keys(G.hid || {}).length ? `Skill ẩn: ${Object.keys(G.hid).map(k => HIDDEN[k].emoji + ' ' + HIDDEN[k].name).join(', ')}<br>` : '') +
     `Bùa: ${Object.keys(G.boons).map(k => BOONS[k].emoji + (G.boons[k] > 1 ? '×' + G.boons[k] : '')).join(' ') || '—'}<br>` +
     `Nhặt được: <b style="color:#ffe08a">🪙 ${G.gold}</b>${G.loot.length ? ' · ' + G.loot.map(it => `<b style="color:${RARITY[it.rar].col}">${it.name}</b>`).join(', ') : ''}<br>` +
     (G.summary ? G.summary + '<br>' : '') +
@@ -5000,7 +5016,8 @@ function resetGame() {
   Object.assign(G, { stage: 0, phase: '', pt: 0, groups: [], total: 0, score: 0, kills: 0, killCount: 0, time: 0, skills: [], up: {}, elem: null, cd: {},
     energy: 0, slowT: 0, fuBanner: 0, marks: [], lava: { state: 'off', t: 0 }, flash: 0, nameT: -1, bossBar: 0, endT: -1, won: false, pickNext: false,
     offered: [], prevSeen: loadSeen(), bossLv: 0, pr: 1, maxOn: 0, spawnSt: null, reacts: 0, fuTier: 2, gold: 0, loot: [], committed: false, rs: { fus: 0, tri: 0, bosses: 0, ds3: 0, elite: 0 }, loop: 0, endless: SAVE.mode === 'endless', loopNext: false, boons: {}, elitePath: false, wasElite: false, goldMul: 1 });
-  P.wardN = 0;
+  P.wardN = 0; P.blinkCD = 0;
+  Object.assign(G, { hid: {}, revived: false, dodge: null, dodgeN: 0, stopUsed: false, holeT: 4 }); holes.length = 0; dodgeWarns.length = 0;
   for (const k in MON_BASE) MON[k] = MON_BASE[k];
   combo.hits = 0; combo.t = 0; shake = 0; hitstop = 0;
   playA('idle');
@@ -5671,11 +5688,13 @@ function afterStage(bonus) {
       pick: () => { gainBoon(k); if (G.wasElite) { G.wasElite = false; afterStage(true); } else pathChoice(next); } })));
 }
 function pathChoice(next) {
-  if (STAGES[next].boss || Math.random() > 0.45) { resume(next); return; }
+  const dodgeFirst = !(G.dodgeN > 0) && G.stage >= 7 && hiddenLeft().length;   // lần chơi nào cũng gặp Màn Né Tránh ít nhất 1 lần
+  if (STAGES[next].boss || (!dodgeFirst && Math.random() > 0.45)) { resume(next); return; }
   const opts = [
     { emoji: '🛤️', name: 'Đường thường', desc: 'Đi tiếp như bình thường.', pick: () => resume(next) },
     { emoji: '💀', name: 'Đường tinh anh', tag: 'Khó hơn', cls: 'elite', desc: 'Một nửa số quái thành tinh anh. Vàng ×2, rơi trang bị ×3, bùa thưởng thêm.', pick: () => { G.elitePath = true; G.rs.elite++; resume(next); } },
   ];
+  if (hiddenLeft().length && (dodgeFirst || Math.random() < 0.4)) opts.push({ emoji: '🌀', name: 'Màn Né Tránh', tag: 'Skill ẩn', cls: 'elite', desc: `Không đánh được, né mưa đạn ${DODGE.dur} giây. Trúng dưới ${DODGE.maxHits} lần thì chọn 1 skill ẩn.`, pick: () => startDodge(next) });
   if (Math.random() < 0.6) opts.push({ emoji: '🏮', name: 'Thương nhân', tag: 'Tiêu vàng', desc: 'Ghé quán mua máu, bùa, nâng ★ kỹ năng bằng vàng nhặt trong trận.', pick: () => merchant(next) });
   showChoice('Ngã rẽ', 'Chọn đường đi cho màn sau.', opts);
 }
@@ -5687,6 +5706,175 @@ function merchant(next) {
   ];
   if (upk.length) { const k = upk[0]; items.push({ emoji: SKILLS[k].emoji, name: '★ ' + SKILLS[k].name, desc: 'Nâng cấp ★: hồi chiêu nhanh hơn 30%, chiêu mạnh hơn 50%.', price: '150🪙', off: !can(150), pick: () => { G.gold -= 150; G.up[k] = true; sfx('boon'); merchant(next); } }); }
   showChoice(`Thương nhân · bạn có 🪙 ${G.gold}`, 'Vàng tiêu ở đây sẽ không mang về sảnh.', items, { label: 'Đi tiếp ▶', pick: () => resume(next) });
+}
+
+// ============ Màn Né Tránh: không đánh được, chỉ né mưa đạn 25 giây. Qua được thì chọn 1 skill ẩn ============
+const HIDDEN = {
+  revive: { name: 'Hồi Sinh', emoji: '👼', desc: 'Hết máu thì sống lại 1 lần với nửa máu, bất tử 2,5 giây.' },
+  soul: { name: 'Đoạt Hồn', emoji: '👻', desc: 'Mỗi nhát chém trúng hút lại máu (khoảng 1 máu mỗi 2 nhát).' },
+  stop: { name: 'Ngưng Thời', emoji: '⏳', desc: 'Máu tụt dưới 40% thì quái đứng im 5 giây, boss chậm lại. Mỗi màn 1 lần.' },
+  hole: { name: 'Hố Đen', emoji: '🕳️', desc: 'Cứ 9 giây mở hố đen chỗ quái đông nhất, hút quái gom lại và rút máu.' },
+  blink: { name: 'Thuấn Di', emoji: '💨', desc: 'Lướt thành dịch chuyển tức thời 110px, bất tử lúc dịch chuyển (hồi 2,5 giây).' },
+  berserk: { name: 'Cuồng Nộ', emoji: '😡', desc: 'Còn dưới 30% máu thì đánh đau gấp đôi.' },
+};
+const DODGE = { dur: 25, maxHits: 3, dmg: 6, bannerT: 2.2, endT: 1.8, perfectGold: 60, score: 1500 };
+const hid = k => !!(G.hid && G.hid[k]);
+const holes = [], dodgeWarns = [];
+function hiddenLeft() { return Object.keys(HIDDEN).filter(k => !hid(k)); }
+function startDodge(next) {
+  pickEl.hidden = true; ptrs.clear(); G.mode = 'play';
+  mons.length = 0; orbs.length = 0; G.marks.length = 0; dodgeWarns.length = 0;
+  G.phase = 'dodge'; G.pt = 0; G.dodgeN = (G.dodgeN || 0) + 1;
+  G.dodge = { next, t: 0, hits: 0, state: 'banner', rainT: 0, sweepT: 2, burstT: 7, aimT: 12, endT: 0 };
+  sfx('warning', 1);
+}
+// dấu báo trước: vạch đỏ ngang (đạn quét) hoặc vòng đỏ (chùm nổ), hết giờ thì bắn
+function warnThen(w, fire) { w.life = w.max = 0.7; w.fire = fire; dodgeWarns.push(w); }
+function dodgeShot(x, y, vx, vy, kind, r) { orbs.push({ kind: kind || 'orb', x, y, vx, vy, r: r || 6, life: 6, dmg: DODGE.dmg, dead: false }); }
+function dodgeSpawn(d, dt) {
+  const k = d.t / DODGE.dur;   // 0 -> 1: đạn dày dần
+  d.rainT -= dt;
+  if (d.rainT <= 0) { d.rainT = lerp(0.5, 0.2, k); dodgeShot(rnd(WALL + 10, AW - WALL - 10), -10, rnd(-20, 20), rnd(150, 210) + 60 * k); }
+  d.sweepT -= dt;
+  if (d.sweepT <= 0) {   // hàng phi tiêu quét ngang: thấp thì nhảy qua, cao thì lướt dưới
+    d.sweepT = lerp(3.4, 2.2, k);
+    const fromL = Math.random() < 0.5, low = Math.random() < 0.55, y = low ? FLOOR - 10 : FLOOR - 36, x0 = fromL ? WALL - 8 : AW - WALL + 8, sp = (fromL ? 1 : -1) * (250 + 60 * k);
+    warnThen({ kind: 'line', y, low }, () => { for (let i = 0; i < 3; i++) later(i * 0.09, () => dodgeShot(x0, y, sp, 0, 'kunai', 6)); });
+  }
+  if (d.t > 6) {
+    d.burstT -= dt;
+    if (d.burstT <= 0) {   // chùm nổ tỏa tròn
+      d.burstT = lerp(4.2, 2.8, k);
+      const x = rnd(WALL + 60, AW - WALL - 60), y = rnd(70, 150), n = 10 + Math.round(4 * k), a0 = rnd(0, 6.28);
+      warnThen({ kind: 'ring', x, y }, () => { for (let i = 0; i < n; i++) { const a = a0 + i * 6.283 / n; dodgeShot(x, y, Math.cos(a) * 125, Math.sin(a) * 125); } fx.push({ type: 'ring', x, y, r: 10, life: 0.25, max: 0.25, col: '#ff6b94', grow: 200 }); });
+    }
+  }
+  if (d.t > 12) {
+    d.aimT -= dt;
+    if (d.aimT <= 0) {   // hai góc trên bắn nhắm thẳng vào mình
+      d.aimT = lerp(2.6, 1.8, k);
+      for (const x of [WALL + 14, AW - WALL - 14]) { const a = Math.atan2(P.y - 24 - 20, P.x - x); dodgeShot(x, 20, Math.cos(a) * 190, Math.sin(a) * 190, 'stinger'); }
+    }
+  }
+}
+function dodgeUpdate(dt) {
+  const d = G.dodge;
+  for (let i = dodgeWarns.length - 1; i >= 0; i--) { const w = dodgeWarns[i]; w.life -= dt; if (w.life <= 0) { dodgeWarns.splice(i, 1); if (d.state === 'run') w.fire(); } }
+  if (d.state === 'banner') { if (G.pt > DODGE.bannerT) { d.state = 'run'; d.t = 0; } return; }
+  if (d.state === 'run') {
+    d.t += dt;
+    dodgeSpawn(d, dt);
+    if (d.hits >= DODGE.maxHits) dodgeFinish(false);
+    else if (d.t >= DODGE.dur) dodgeFinish(true);
+    return;
+  }
+  d.endT -= dt;
+  if (d.endT <= 0) {
+    G.dodge = null; orbs.length = 0; dodgeWarns.length = 0;
+    if (d.ok) hiddenPick(d.next); else resume(d.next);
+  }
+}
+function dodgeFinish(ok) {
+  const d = G.dodge; d.state = 'end'; d.ok = ok; d.endT = DODGE.endT; G.pt = 0;
+  for (const o of orbs) popOrb(o, false);
+  dodgeWarns.length = 0;
+  if (ok) {
+    G.score += DODGE.score; sfx('levelup', 1); pfxPlay('win', P.x, P.y - 30, { sc: 0.6, must: true });
+    if (!d.hits) { G.gold += DODGE.perfectGold; d.perfect = true; }
+  } else sfx('lose', 1);
+}
+// trúng đạn trong Màn Né Tránh: đếm lượt, mất ít máu, không bao giờ chết
+function dodgeHurt(d) { G.dodge.hits++; return Math.max(0, Math.min(DODGE.dmg, P.hp - 1, d)); }
+function hiddenPick(next) {
+  const left = shuffle(hiddenLeft()).slice(0, 3);
+  if (!left.length) { lifeGain(P.maxHp); resume(next); return; }
+  showChoice('Qua Màn Né Tránh! Chọn 1 skill ẩn', 'Skill ẩn chỉ có ở Màn Né Tránh, tự chạy, giữ tới hết trận.',
+    left.map(k => ({ emoji: HIDDEN[k].emoji, name: HIDDEN[k].name, desc: HIDDEN[k].desc, tag: 'Skill ẩn', cls: 'elite', pick: () => { G.hid[k] = true; sfx('boon'); pfxPlay('level', P.x, P.y, { follow: P, sc: 0.7, must: true }); resume(next); } })));
+}
+// Hồi Sinh: gọi lúc máu về 0, trả về true nếu được cứu
+function tryRevive() {
+  if (!hid('revive') || G.revived) return false;
+  G.revived = true; P.hp = Math.round(P.maxHp * 0.5); P.inv = 2.5;
+  G.flash = 0.6; G.flashC = '255,240,190'; sfx('levelup', 1);
+  pfxPlay('level', P.x, P.y, { follow: P, sc: 0.9, must: true });
+  pushNumbers(P, [{ v: 'HỒI SINH', crit: false }], 'heal');
+  return true;
+}
+// Ngưng Thời: máu dưới 40% thì dừng quái 5 giây (mỗi màn 1 lần)
+function tryStopTime() {
+  if (!hid('stop') || G.stopUsed || G.dodge || P.hp >= P.maxHp * 0.4) return;
+  G.stopUsed = true; G.slowT = G.slowMax = 5;
+  for (const m of mons) if (!isBig(m)) m.frozen = Math.max(m.frozen || 0, 5);
+  fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 14, life: 0.5, max: 0.5, col: '#bfe6ff', grow: 500 });
+  pushNumbers(P, [{ v: 'NGƯNG THỜI', crit: false }], 'block');
+}
+function hiddenTick(dt) {
+  P.blinkCD = (P.blinkCD || 0) - dt;
+  for (let i = holes.length - 1; i >= 0; i--) {
+    const h = holes[i]; h.life -= dt; h.tick -= dt;
+    for (const m of mons) {
+      if (m.dead || isBig(m)) continue;
+      const dx = h.x - m.x, dy = h.y - (m.y - 14), dist = Math.hypot(dx, dy);
+      if (dist > 170 || dist < 6) continue;
+      const pull = Math.min(dist, 190 * dt);
+      m.x += dx / dist * pull; if (FLYERS.includes(m.kind)) m.y += dy / dist * pull;
+    }
+    if (h.tick <= 0) { h.tick = 0.4; areaHit(h.x, h.y, 60, { dmg: [260, 380], lines: 1, style: 'shadow', stun: 0.3 }); }
+    if (h.life <= 0) holes.splice(i, 1);
+  }
+  if (!hid('hole') || G.dodge || P.dead) return;
+  G.holeT = (G.holeT === undefined ? 4 : G.holeT) - dt;
+  const live = mons.filter(m => !m.dead && Math.abs(m.x - P.x) < 260);
+  if (G.holeT <= 0 && (live.length >= 2 || boss)) {
+    G.holeT = 9;
+    let x = boss ? boss.x : 0, y = boss ? boss.y - 30 : 0;
+    if (!boss) { for (const m of live) { x += m.x; y += m.y - 14; } x /= live.length; y /= live.length; }
+    holes.push({ x: clamp(x, WALL + 30, AW - WALL - 30), y: clamp(y, 60, FLOOR - 20), life: 2.6, max: 2.6, tick: 0.2 });
+  }
+}
+// Thuấn Di: gọi lúc bắt đầu lướt
+function tryBlink() {
+  if (!hid('blink') || P.blinkCD > 0) return;
+  P.blinkCD = 2.5;
+  ghosts.push({ name: P.anim.name, f: P.anim.f, x: P.x, y: P.y, face: P.face, life: 0.35, max: 0.35 });
+  fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 8, life: 0.25, max: 0.25, col: '#c8f0ff', grow: 160 });
+  P.x = clamp(P.x + P.face * 110, WALL + 10, AW - WALL - 10); P.inv = Math.max(P.inv, 0.35);
+  fx.push({ type: 'ring', x: P.x, y: P.y - 24, r: 8, life: 0.25, max: 0.25, col: '#c8f0ff', grow: 160 });
+}
+function drawHoles(time) {
+  for (const h of holes) {
+    const a = Math.min(1, (h.max - h.life) / 0.25, h.life / 0.3), r = 26 * a;
+    ctx.save(); ctx.globalAlpha = a;
+    const g = ctx.createRadialGradient(h.x, h.y, 2, h.x, h.y, r * 2);
+    g.addColorStop(0, '#000'); g.addColorStop(0.45, '#12052a'); g.addColorStop(0.7, 'rgba(140,70,255,.55)'); g.addColorStop(1, 'rgba(90,30,200,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(h.x, h.y, r * 2, 0, 6.29); ctx.fill();
+    ctx.strokeStyle = 'rgba(200,160,255,.8)'; ctx.lineWidth = 1.5;
+    for (let i = 0; i < 3; i++) { const s = time * 5 + i * 2.1; ctx.beginPath(); ctx.arc(h.x, h.y, r * (0.8 + 0.25 * i), s, s + 1.6); ctx.stroke(); }
+    ctx.restore();
+  }
+}
+function drawDodgeWarns() {
+  for (const w of dodgeWarns) {
+    const on = Math.floor(w.life * 12) % 2 === 0;
+    ctx.save(); ctx.globalAlpha = on ? 0.85 : 0.35; ctx.strokeStyle = '#ff2b3a'; ctx.lineWidth = 2; ctx.setLineDash([8, 6]);
+    if (w.kind === 'line') { ctx.beginPath(); ctx.moveTo(WALL, w.y); ctx.lineTo(AW - WALL, w.y); ctx.stroke();
+      ctx.setLineDash([]); ctx.fillStyle = '#ff6b6b'; ctx.font = '800 10px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(w.low ? '▲ NHẢY' : '▼ LƯỚT', AW / 2, w.y - 8); }
+    else { ctx.beginPath(); ctx.arc(w.x, w.y, 16 + (1 - w.life / w.max) * 10, 0, 6.29); ctx.stroke(); }
+    ctx.restore();
+  }
+}
+function drawDodgeHud() {
+  const d = G.dodge, w = Math.min(300, cssW * 0.4), x = (cssW - w) / 2, y = 22, left = Math.max(0, DODGE.dur - d.t);
+  ctx.fillStyle = 'rgba(8,11,20,.65)'; rr(ctx, x - 6, 6, w + 12, 30, 8); ctx.fill();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 10px system-ui, sans-serif'; ctx.fillStyle = '#9fe8ff';
+  ctx.fillText(`MÀN NÉ TRÁNH · còn ${left.toFixed(1)} giây · trúng ${d.hits}/${DODGE.maxHits}`, cssW / 2, 13);
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(x, y, w, 8);
+  ctx.fillStyle = '#4fc8ff'; ctx.fillRect(x, y, w * (d.state === 'banner' ? 1 : left / DODGE.dur), 8);
+}
+function drawDodgeBanner() {
+  const d = G.dodge;
+  if (d.state === 'banner') drawBanner('MÀN NÉ TRÁNH', `Không đánh được! Sống sót ${DODGE.dur} giây, trúng dưới ${DODGE.maxHits} lần`, 'Qua được thì chọn 1 skill ẩn', G.pt, DODGE.bannerT, '#7fe0ff');
+  else if (d.state === 'end') drawBanner(d.ok ? 'QUA RỒI!' : 'THẤT BẠI', d.ok ? (d.perfect ? `Không trúng đòn nào! +${DODGE.perfectGold}🪙` : 'Chọn 1 skill ẩn') : 'Trúng đạn quá nhiều, đi tiếp màn sau', '', G.pt, DODGE.endT, d.ok ? '#8ef0a8' : '#ff8a95');
 }
 
 // ============ Âm thanh thật (Kenney CC0) + nhạc nền "Battle Theme A" (cynicmusic, CC0) ============
@@ -6400,7 +6588,7 @@ function boot() {
   addEventListener('click', e => { if (e.target.closest && e.target.closest('button')) sfx('ui'); });
   showTitle();
   window.__dbg = { P, T, G, mons, orbs, combo, VAR, joy, ctrls, get boss() { return boss; }, startStage, resetGame, showPick, trySkill, tryFusion, spawnGroup, STAGES, dealDamage, SPR, CHARS,
-    setChar(k) { G.char = k; CH = CHARS[k]; resetGame(); }, fusionOf, vortices, zones, pets, shots, SKILLS, rollRun, bossKindAt, MON, react, buildPower, pressure, showTitle, fusionOf2: fusionOf, spawnGiant, endlessBossOrder, NEW_BOSSES, setBiome, setGfx, saveCode, loadCode, showSettings, BIOMES, startTutorial, endTutorial, nextLoop, runSummary, checkAch, dailyList, BUF, AU, BOONS, gainBoon, afterStage, bn, sfx, get SAVE() { return SAVE; }, set SAVE(v) { SAVE = v; }, showLobby, showEnd, makeItem, equipItem, pickups, eqStats, commitRun, refreshShop, newSave, renderLobby };
+    setChar(k) { G.char = k; CH = CHARS[k]; resetGame(); }, fusionOf, vortices, zones, pets, shots, SKILLS, rollRun, bossKindAt, MON, react, buildPower, pressure, showTitle, fusionOf2: fusionOf, spawnGiant, endlessBossOrder, NEW_BOSSES, setBiome, setGfx, saveCode, loadCode, showSettings, BIOMES, startTutorial, endTutorial, nextLoop, runSummary, checkAch, dailyList, BUF, AU, BOONS, gainBoon, afterStage, bn, sfx, get SAVE() { return SAVE; }, set SAVE(v) { SAVE = v; }, showLobby, showEnd, makeItem, equipItem, pickups, eqStats, commitRun, refreshShop, newSave, renderLobby, startDodge, pathChoice, HIDDEN, holes, hurtPlayer, hiddenPick };
   requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
 }
 // tải ảnh: nhân vật (IMG, dùng để tách lưỡi kiếm) + quái/boss (SPR). Bản một-file nhúng sẵn ảnh vào

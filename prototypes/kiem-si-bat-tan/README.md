@@ -148,6 +148,34 @@ Sau khi chọn bùa, nếu màn sau không phải boss thì 45% gặp **ngã r�
 
 Màn kết thúc liệt kê các bùa đã lấy.
 
+## Màn Né Tránh và 6 skill ẩn
+
+Ở **ngã rẽ** có thêm lối 🌀 **Màn Né Tránh** (40% hiện ra; lần chơi nào chưa gặp thì từ sau màn 8 chắc chắn có ngã rẽ kèm lối này).
+Vào đó **không chém, không dùng chiêu được**, chỉ chạy, nhảy, lướt để né mưa đạn trong **25 giây**:
+
+- Đạn rơi từ trên trời, dày dần theo thời gian.
+- Hàng phi tiêu quét ngang, có vạch đỏ báo trước 0,7 giây: **▲ NHẢY** (hàng thấp) hoặc **▼ LƯỚT** (hàng cao, lướt người thấp xuống chui qua).
+- Từ giây 6: chùm đạn nổ tỏa tròn (vòng đỏ báo trước). Từ giây 12: hai góc trên bắn kim nhắm thẳng vào mình.
+
+Mỗi lần trúng mất 6 máu nhưng **không chết được**. Trúng **3 lần là thất bại** (đi tiếp, không được gì). Qua được: +1.500 điểm,
+không trúng lần nào thì thêm 60🪙, rồi **chọn 1 trong 3 skill ẩn**. Skill ẩn tự chạy, không chiếm ô, giữ tới hết trận,
+hiện thành hàng biểu tượng dưới thanh máu và trong bảng kết thúc.
+
+| Skill ẩn | Tác dụng |
+|---|---|
+| 👼 Hồi Sinh | Hết máu thì sống lại 1 lần với nửa máu, bất tử 2,5 giây |
+| 👻 Đoạt Hồn | Mỗi nhát chém trúng hút lại máu (khoảng 1 máu mỗi 2 nhát) |
+| ⏳ Ngưng Thời | Máu tụt dưới 40% thì quái đứng im 5 giây, boss chậm lại. Mỗi màn 1 lần |
+| 🕳️ Hố Đen | Cứ 9 giây mở hố đen chỗ quái đông nhất, hút quái gom lại và rút máu trong 2,6 giây |
+| 💨 Thuấn Di | Lướt thành dịch chuyển tức thời 110px, bất tử lúc dịch chuyển (hồi 2,5 giây) |
+| 😡 Cuồng Nộ | Còn dưới 30% máu thì đánh đau gấp đôi |
+
+Thông số nằm trong `DODGE` (thời gian, số lần trúng, sát thương, vàng thưởng) và `HIDDEN` trong `prototype.html`.
+
+![Màn Né Tránh](screenshot-dodge.png)
+![Chọn skill ẩn](screenshot-hidden-pick.png)
+![Hố Đen trong trận](screenshot-hidden-ingame.png)
+
 ## 4 vùng đất
 
 Mỗi 5 màn một vùng (màn boss thuộc vùng của nó). Màn đầu của vùng ghi tên vùng và bẫy trên bảng giới thiệu màn.
@@ -458,7 +486,7 @@ Chữ đuôi theo họ: Cửu Thiên Quyển (lốc), Phá Thiên Trảm (trăng
   Lãng Khách đỡ), tím đậm (mình mất máu), xanh lá (hồi máu), vàng "CHẶN" (Khiên Thánh chặn đòn).
 - Quái bị chậm thì phủ màu xanh lam nhạt, đóng băng thì đứng yên và trắng xanh, trúng độc thì phủ xanh nõn và sủi bọt.
 
-**Đã cắt:** âm thanh, nhạc, Màn Né Tránh, skill ẩn, boss Thụ Yêu và Băng Hậu.
+**Đã cắt:** boss Thụ Yêu và Băng Hậu.
 
 ## Ghi chú kỹ thuật
 
