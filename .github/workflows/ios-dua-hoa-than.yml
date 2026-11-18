@@ -36,7 +36,7 @@ jobs:
           $PB -c "Add :UIRequiresFullScreen bool true" $P || true
           $PB -c "Add :UIStatusBarHidden bool true" $P || true
           $PB -c "Set :UIViewControllerBasedStatusBarAppearance false" $P || $PB -c "Add :UIViewControllerBasedStatusBarAppearance bool false" $P
-                - name: Build unsigned app
+      - name: Build unsigned app
         run: |
           cd app/ios/App
           xcodebuild -workspace App.xcworkspace -scheme App -configuration Release \
