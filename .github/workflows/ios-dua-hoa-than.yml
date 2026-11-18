@@ -20,8 +20,8 @@ jobs:
           {"appId":"com.vtagames.duahoathan","appName":"DuaHoaThan","webDir":"www",
            "ios":{"contentInset":"never","scrollEnabled":false,"backgroundColor":"#000000"}}
           JSON
-          npx cap add ios --packagemanager SPM
-          npx cap sync ios
+          npx cap add ios
+          ls ios/App
           P=ios/App/App/Info.plist
           PB=/usr/libexec/PlistBuddy
           $PB -c "Set :CFBundleDisplayName Đua Hóa Thân" $P || $PB -c "Add :CFBundleDisplayName string Đua Hóa Thân" $P
@@ -36,11 +36,10 @@ jobs:
           $PB -c "Add :UIRequiresFullScreen bool true" $P || true
           $PB -c "Add :UIStatusBarHidden bool true" $P || true
           $PB -c "Set :UIViewControllerBasedStatusBarAppearance false" $P || $PB -c "Add :UIViewControllerBasedStatusBarAppearance bool false" $P
-          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*;/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/g' ios/App/App.xcodeproj/project.pbxproj
-      - name: Build unsigned app
+                - name: Build unsigned app
         run: |
           cd app/ios/App
-          xcodebuild -project App.xcodeproj -scheme App -configuration Release \
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release \
             -sdk iphoneos -destination 'generic/platform=iOS' \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
