@@ -3,6 +3,8 @@ on:
   push:
     branches: [ios-build]
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   ipa:
     runs-on: macos-15
@@ -55,3 +57,14 @@ jobs:
         with:
           name: DuaHoaThan-ipa
           path: DuaHoaThan.ipa
+      - name: Publish release + keep a copy in branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=dua-hoa-than-ios-${{ github.run_number }}
+          gh release create "$TAG" DuaHoaThan.ipa --target "$GITHUB_SHA" \
+            --title "Đua Hóa Thân – iOS IPA (#${{ github.run_number }})" \
+            --notes "Bản IPA chưa ký của Đua Hóa Thân (gói từ prototypes/dua-hoa-than/index.html). Cài bằng TrollStore / AppSync hoặc ký bằng Sideloadly/ESign." --prerelease
+          mkdir -p dist && cp DuaHoaThan.ipa dist/
+          git config user.name "github-actions"; git config user.email "github-actions@users.noreply.github.com"
+          git add dist/DuaHoaThan.ipa && git commit -m "chore: add built IPA [skip ci]" && git push origin HEAD:ios-build
