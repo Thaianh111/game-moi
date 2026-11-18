@@ -5,6 +5,7 @@ Mỗi game một thư mục trong `prototypes/`. Trang tổng hợp có nút ch�
 | Game | Thư mục | Trạng thái | Link chơi |
 |---|---|---|---|
 | 🐶 Lu Troll | `lu-troll/` | Chơi được (3 màn) | https://thaianh111.github.io/game-moi/prototypes/lu-troll/ |
+| 🦊 Đua Hóa Thân | `dua-hoa-than/` | Chơi được (3 màn) | https://thaianh111.github.io/game-moi/prototypes/dua-hoa-than/ |
 | ⚔️ Kiếm Sĩ Bất Tận | `kiem-si-bat-tan/` | Chơi được | https://thaianh111.github.io/game-moi/prototypes/kiem-si-bat-tan/ |
 | 🌊 Người Giữ Biển | `nguoi-giu-bien/` | Cảnh biển thử | https://thaianh111.github.io/game-moi/prototypes/nguoi-giu-bien/ |
 | 🌾 Nông Trại Nhỏ | `nong-trai-nho/` | Chơi được (repo riêng) | https://thaianh111.github.io/nongtrai-nho/ |
