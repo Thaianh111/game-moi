@@ -4,6 +4,17 @@ Game đua vượt chướng ngại 2D: đổi qua lại giữa **cáo, chim, tê
 
 **Chơi ngay:** https://thaianh111.github.io/game-moi/prototypes/dua-hoa-than/ (xoay ngang điện thoại)
 
+## Giả thuyết đang thử
+Đổi hình liên tục (mỗi hình tối đa 3 giây) cộng với chướng ngại "đúng hình mới qua" có đủ cuốn để người chơi muốn đua lại không?
+
+## Trạng thái
+Đang làm (in-progress), bản thử HTML một file.
+
+## Kết quả đến giờ
+- Chạy bot thử cả 3 màn: không có chỗ kẹt cứng. Chơi giỏi và dùng vật phẩm thì về nhất, chơi ẩu thì thường về nhì.
+- Đã bỏ cách đi hết màn bằng chim (bị chặn ở vách đá, giới hạn độ cao, đồng hồ 3 giây).
+- Chưa có người thật chơi thử.
+
 ## Cách chơi
 - Nhân vật tự chạy. Bấm 3 nút bên trái để đổi hình, nút tròn bên phải để nhảy / vỗ cánh.
 - Mỗi hình chỉ giữ được **3 giây**, hết giờ sẽ tự biến ngẫu nhiên.
